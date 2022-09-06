@@ -1,41 +1,44 @@
-<section class="phx-hero">
-  <h1><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
-  <p>Peace of mind from prototype to production</p>
-</section>
+<main class="bg-gray-400 w-screen h-screen flex">
+  <div id="main-panel" class="flex flex-col w-3/4">
+    <header class="flex justify-between py-2 px-4 bg-gray-800 font-bold">
+      <div class="text-neutral-200">Time: 2</div>
+      <div class="text-sky-500">Level: 1</div>
+      <div class="text-green-500">Lives: 14</div>
+      <div class="text-yellow-500">Gold: 49</div>
+      <div class="text-red-500">Score: 4</div>
+    </header>
 
-<section class="row">
-  <article class="column">
-    <h2>Resources</h2>
-    <ul>
-      <li>
-        <a href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix">Source</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix/blob/v1.6/CHANGELOG.md">v1.6 Changelog</a>
-      </li>
-    </ul>
-  </article>
-  <article class="column">
-    <h2>Help</h2>
-    <ul>
-      <li>
-        <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
-      </li>
-      <li>
-        <a href="https://web.libera.chat/#elixir">#elixir on Libera Chat (IRC)</a>
-      </li>
-      <li>
-        <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
-      </li>
-      <li>
-        <a href="https://elixir-slackin.herokuapp.com/">Elixir on Slack</a>
-      </li>
-      <li>
-        <a href="https://discord.gg/elixir">Elixir on Discord</a>
-      </li>
-    </ul>
-  </article>
-</section>
+    <div id="game" class="flex flex-col items-center py-4 bg-neutral-300 h-full">
+      <canvas id="board" class="m-auto w-[700px] h-[700px] m-4 bg-gray-200 border border-gray-700 border-8 border-opacity-25 rounded-md shadow-xl">
+      </canvas>
+    </div>
+
+    <div id="status-panel" class="p-3 flex fixed bottom-3 z-0 bg-gray-800">
+      <%= for {level, type} <- [{1, :normal}, {2, :normal}, {3, :group}, {4, :immune}, {5, :fast}, {6, :spawn}, {7, :flying}, {8, :boss}] do %>
+        <div class={"flex items-center space-x-2 w-28 px-2 py-1 ml-[-2px] border border-2 border-gray-600 #{@status_colors[type]}"}>
+          <div class="text-2xl text-gray-700"><%= level %></div>
+          <div class="text-sm font-bold uppercase text-white w-full text-center"><%= type %></div>
+        </div>
+      <% end %>
+      <div id="cursor" class="fixed w-28 h-12 mt-[-2px] ml-[-2px] border border-2 border-orange-400"></div>
+    </div>
+  </div>
+
+  <div id="right-panel" class="flex flex-col w-1/4 z-10 bg-zinc-700 text-neutral-200">
+    <div class="flex flex-col p-2 space-y-2 text-lg">
+      <div class="flex justify-between">
+        <div class="px-6 border border-2 border-orange-400">PAUSE</div>
+        <div class="px-6 border border-2 border-orange-400">RESET</div>
+      </div>
+      <div class="border border-2 border-orange-400 text-center">Send next level</div>
+    </div>
+
+    <div id="towers" class="flex justify-between p-2">
+      <%= for {name, tower} <- @towers do %>
+        <div id={name} class="px-2 py-1 border border-2 border-dotted border-gray-600 bg-gray-100 text-gray-800">
+          <%= tower[:symbol] %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</main>
