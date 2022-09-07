@@ -14,10 +14,10 @@ defmodule TowerDefenseWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", TowerDefenseWeb do
+  scope "/", TowerDefenseWeb.Live do
     pipe_through :browser
 
-    get "/", PageController, :index
+    live "/", Game
   end
 
   # Other scopes may use custom stacks.

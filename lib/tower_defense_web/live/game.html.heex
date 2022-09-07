@@ -1,21 +1,25 @@
 <main class="bg-gray-400 w-screen h-screen flex">
   <div id="main-panel" class="flex flex-col w-3/4">
-    <header class="flex justify-between py-2 px-4 bg-gray-800 font-bold">
-      <div class="text-neutral-200">Time: 2</div>
-      <div class="text-sky-500">Level: 1</div>
-      <div class="text-green-500">Lives: 14</div>
-      <div class="text-yellow-500">Gold: 49</div>
-      <div class="text-red-500">Score: 4</div>
+    <header class="px-4 bg-gray-800 text-neutral-100 text-md font-bold font-mono text-center">
+      🏰 Tower Defense 🏰
     </header>
+
+    <div class="grid grid-cols-5 py-2 px-4 bg-gray-800 font-bold">
+      <div class="text-neutral-200">Time: <%= @game_state[:time] %></div>
+      <div class="text-sky-500">Level: <%= @game_state[:level] %></div>
+      <div class="text-green-500">Lives: <%= @game_state[:lives] %></div>
+      <div class="text-yellow-500">Gold: <%= @game_state[:gold] %></div>
+      <div class="text-red-500">Score: <%= @game_state[:score] %></div>
+    </div>
 
     <div id="game" class="flex flex-col items-center py-4 bg-neutral-300 h-full">
       <canvas id="board" class="m-auto w-[700px] h-[700px] m-4 bg-gray-200 border border-gray-700 border-8 border-opacity-25 rounded-md shadow-xl">
       </canvas>
     </div>
 
-    <div id="status-panel" class="p-3 flex fixed bottom-3 z-0 bg-gray-800">
-      <%= for {level, type} <- [{1, :normal}, {2, :normal}, {3, :group}, {4, :immune}, {5, :fast}, {6, :spawn}, {7, :flying}, {8, :boss}] do %>
-        <div class={"flex items-center space-x-2 w-28 px-2 py-1 ml-[-2px] border border-2 border-gray-600 #{@status_colors[type]}"}>
+    <div id="status-panel" class="p-3 w-full flex fixed bottom-3 z-0 bg-gray-800">
+      <%= for {level, type} <- @config[:levels] do %>
+        <div class={"flex items-center space-x-2 w-28 px-2 py-1 ml-[-2px] border border-2 border-gray-600 #{@config[:status_colors][type]}"}>
           <div class="text-2xl text-gray-700"><%= level %></div>
           <div class="text-sm font-bold uppercase text-white w-full text-center"><%= type %></div>
         </div>
@@ -34,7 +38,7 @@
     </div>
 
     <div id="towers" class="flex justify-between p-2">
-      <%= for {name, tower} <- @towers do %>
+      <%= for {name, tower} <- @config[:towers] do %>
         <div id={name} class="px-2 py-1 border border-2 border-dotted border-gray-600 bg-gray-100 text-gray-800">
           <%= tower[:symbol] %>
         </div>
