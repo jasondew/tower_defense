@@ -5,43 +5,74 @@
     </header>
 
     <div class="grid grid-cols-5 py-2 px-4 bg-gray-800 font-bold">
-      <div class="text-neutral-200">Time: <%= @game_state[:time] %></div>
-      <div class="text-sky-500">Level: <%= @game_state[:level] %></div>
-      <div class="text-green-500">Lives: <%= @game_state[:lives] %></div>
-      <div class="text-yellow-500">Gold: <%= @game_state[:gold] %></div>
-      <div class="text-red-500">Score: <%= @game_state[:score] %></div>
+      <div class="text-neutral-200">Time: <%= @state.time %></div>
+      <div class="text-sky-500">Level: <%= @state.level %></div>
+      <div class="text-green-500">Lives: <%= @state.lives %></div>
+      <div class="text-yellow-500">Gold: <%= @state.gold %></div>
+      <div class="text-red-500">Score: <%= @state.score %></div>
     </div>
 
-    <div id="game" class="flex flex-col items-center py-4 bg-neutral-300 h-full">
-      <canvas id="board" class="m-auto w-[700px] h-[700px] m-4 bg-gray-200 border border-gray-700 border-8 border-opacity-25 rounded-md shadow-xl">
-      </canvas>
+    <div id="board-container" class="flex flex-col items-center py-4 bg-neutral-300 h-full">
+      <div
+        id="board"
+        phx-click="board-click"
+        phx-hook="TrackBoardPosition"
+        class="
+          relative m-auto w-[796px] h-[796px] m-4 bg-gray-200
+          border border-gray-500 border-8 border-opacity-50
+          rounded-sm shadow-2xl
+        "
+      >
+        <%= for %{type: type, position: {x, y}} <- @state.towers do %>
+          <.tower type={type} style={"position: absolute; top: #{y * 30}px; left: #{x * 30}px"}/>
+        <% end %>
+      </div>
     </div>
 
-    <div id="status-panel" class="p-3 w-full flex fixed bottom-3 z-0 bg-gray-800">
-      <%= for {level, type} <- @config[:levels] do %>
-        <div class={"flex items-center space-x-2 w-28 px-2 py-1 ml-[-2px] border border-2 border-gray-600 #{@config[:status_colors][type]}"}>
-          <div class="text-2xl text-gray-700"><%= level %></div>
-          <div class="text-sm font-bold uppercase text-white w-full text-center"><%= type %></div>
-        </div>
-      <% end %>
-      <div id="cursor" class="fixed w-28 h-12 mt-[-2px] ml-[-2px] border border-2 border-orange-400"></div>
+    <div id="status-panel" class="p-3 w-full fixed bottom-3 z-0 bg-gray-800">
+      <div class="flex" style={"margin-left: -#{@state.time}px"}>
+        <%= for {level, type} <- @config[:levels] do %>
+          <div class={"flex items-center space-x-2 w-28 px-2 py-1 ml-[-2px] border border-2 border-gray-600 #{@config[:status_colors][type]}"}>
+            <div class="text-2xl text-gray-700"><%= level %></div>
+            <div class="text-sm font-bold uppercase text-white w-full text-center"><%= type %></div>
+          </div>
+        <% end %>
+      </div>
+      <div id="cursor" class="fixed bottom-0 w-28 h-12 ml-[-2px] mb-[22px] border border-2 border-orange-400"></div>
     </div>
+  </div>
+
+  <div class={"#{if @state.paused, do: "fixed", else: "hidden"} bg-gray-800 w-3/4 h-full opacity-80 flex items-center"}>
+    <div class="m-auto text-orange-400 text-6xl">Paused...</div>
   </div>
 
   <div id="right-panel" class="flex flex-col w-1/4 z-10 bg-zinc-700 text-neutral-200">
     <div class="flex flex-col p-2 space-y-2 text-lg">
       <div class="flex justify-between">
-        <div class="px-6 border border-2 border-orange-400">PAUSE</div>
-        <div class="px-6 border border-2 border-orange-400">RESET</div>
+        <%= if @state.paused do %>
+          <button class="px-6 border border-2 border-orange-400" phx-click="toggle-pause">
+            RESUME
+          </button>
+        <% else %>
+          <button class="px-6 border border-2 border-orange-400" phx-click="toggle-pause">
+            PAUSE
+          </button>
+        <% end %>
+        <button class="px-6 border border-2 border-orange-400" phx-click="reset">
+          RESET
+        </button>
       </div>
       <div class="border border-2 border-orange-400 text-center">Send next level</div>
     </div>
 
     <div id="towers" class="flex justify-between p-2">
-      <%= for {name, tower} <- @config[:towers] do %>
-        <div id={name} class="px-2 py-1 border border-2 border-dotted border-gray-600 bg-gray-100 text-gray-800">
-          <%= tower[:symbol] %>
-        </div>
+      <%= for type <- @config[:towers] do %>
+        <.tower
+          type={type}
+          phx-click="select-tower"
+          phx-value-type={type}
+          selected={@selected_tower == type}
+        />
       <% end %>
     </div>
   </div>

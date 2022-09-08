@@ -1,7 +1,11 @@
 defmodule TowerDefenseWeb.Live.Game do
   use TowerDefenseWeb, :live_view
 
+  import TowerDefenseWeb.Live.Components
+
   @one_second 1_000
+  @board_static_offset 10
+
   @status_colors [
     normal: "bg-gray-500",
     group: "bg-blue-500",
@@ -23,14 +27,7 @@ defmodule TowerDefenseWeb.Live.Game do
     {8, :boss}
   ]
 
-  @towers [
-    pellet: %{symbol: "→"},
-    squirt: %{symbol: "▶︎"},
-    dart: %{symbol: "⇞"},
-    swarm: %{symbol: "⏅"},
-    frost: %{symbol: "❄︎"},
-    bash: %{symbol: "◎"}
-  ]
+  @towers [:pellet, :squirt, :dart, :swarm, :frost, :bash]
 
   alias TowerDefense.Game
 
@@ -38,15 +35,22 @@ defmodule TowerDefenseWeb.Live.Game do
   def mount(_params, _session, socket) do
     config = %{levels: @levels, status_colors: @status_colors, towers: @towers}
 
+    unmounted_assigns = %{
+      config: config,
+      state: %Game.State{},
+      selected_tower: nil,
+      board_position: nil
+    }
+
     assigns =
       if connected?(socket) do
         {:ok, game_pid} = Game.start_link([])
-        game_state = Game.get_state(game_pid)
+        state = Game.get_state(game_pid)
         :timer.send_interval(@one_second, :tick)
 
-        %{config: config, game_pid: game_pid, game_state: game_state}
+        Map.merge(unmounted_assigns, %{game_pid: game_pid, state: state})
       else
-        %{config: config, game_state: %{}}
+        unmounted_assigns
       end
 
     {:ok, assign(socket, assigns)}
@@ -54,6 +58,60 @@ defmodule TowerDefenseWeb.Live.Game do
 
   @impl Phoenix.LiveView
   def handle_info(:tick, %{assigns: %{game_pid: game_pid}} = socket) do
-    {:noreply, assign(socket, game_state: Game.tick(game_pid))}
+    {:noreply, assign(socket, state: Game.tick(game_pid))}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle-pause", _unsigned_params, %{assigns: %{game_pid: game_pid}} = socket) do
+    {:noreply, assign(socket, state: Game.toggle_pause(game_pid))}
+  end
+
+  def handle_event("reset", _unsigned_params, %{assigns: %{game_pid: game_pid}} = socket) do
+    {:noreply, assign(socket, state: Game.reset(game_pid))}
+  end
+
+  def handle_event(
+        "select-tower",
+        %{"type" => type},
+        %{assigns: %{selected_tower: current_tower}} = socket
+      ) do
+    new_tower = String.to_existing_atom(type)
+
+    selected_tower =
+      if new_tower == current_tower do
+        nil
+      else
+        new_tower
+      end
+
+    {:noreply, assign(socket, selected_tower: selected_tower)}
+  end
+
+  def handle_event(
+        "board-click",
+        %{"clientX" => x, "clientY" => y},
+        %{assigns: %{game_pid: game_pid, selected_tower: tower, board_position: board_position}} =
+          socket
+      ) do
+    if tower && board_position do
+      position = {
+        tile(x, board_position[:left]),
+        tile(y, board_position[:top])
+      }
+
+      {:noreply, assign(socket, state: Game.add_tower(game_pid, tower, position))}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("board-position", %{"top" => top, "left" => left}, socket) do
+    {:noreply, assign(socket, board_position: %{top: top, left: left})}
+  end
+
+  ## PRIVATE FUNCTIONS
+
+  defp tile(coordinate, offset) do
+    trunc((coordinate - offset - @board_static_offset) / 30)
   end
 end
