@@ -4,7 +4,6 @@ defmodule TowerDefenseWeb.Live.Game do
   import TowerDefenseWeb.Live.Components
 
   @one_second 1_000
-  @board_static_offset 10
 
   @status_colors [
     normal: "bg-gray-500",
@@ -39,7 +38,7 @@ defmodule TowerDefenseWeb.Live.Game do
       config: config,
       state: %Game.State{},
       selected_tower: nil,
-      board_position: nil
+      mouse_position: nil
     }
 
     assigns =
@@ -89,29 +88,36 @@ defmodule TowerDefenseWeb.Live.Game do
 
   def handle_event(
         "board-click",
-        %{"clientX" => x, "clientY" => y},
-        %{assigns: %{game_pid: game_pid, selected_tower: tower, board_position: board_position}} =
-          socket
-      ) do
-    if tower && board_position do
-      position = {
-        tile(x, board_position[:left]),
-        tile(y, board_position[:top])
-      }
-
-      {:noreply, assign(socket, state: Game.add_tower(game_pid, tower, position))}
-    else
-      {:noreply, socket}
-    end
+        _params,
+        %{
+          assigns: %{
+            game_pid: game_pid,
+            selected_tower: tower,
+            mouse_position: position
+          }
+        } = socket
+      )
+      when not is_nil(tower) do
+    {:noreply, assign(socket, state: Game.add_tower(game_pid, tower, position))}
   end
 
-  def handle_event("board-position", %{"top" => top, "left" => left}, socket) do
-    {:noreply, assign(socket, board_position: %{top: top, left: left})}
+  def handle_event("board-click", _params, socket), do: {:noreply, socket}
+
+  def handle_event(
+        "update-board-disposition",
+        %{"x" => x, "y" => y, "size" => size},
+        %{assigns: %{game_pid: game_pid}} = socket
+      ) do
+    {:noreply,
+     assign(
+       socket,
+       state: Game.set_board_disposition(game_pid, %{x: x, y: y, size: size})
+     )}
+  end
+
+  def handle_event("update-mouse-position", %{"x" => x, "y" => y}, socket) do
+    {:noreply, assign(socket, mouse_position: {x, y})}
   end
 
   ## PRIVATE FUNCTIONS
-
-  defp tile(coordinate, offset) do
-    trunc((coordinate - offset - @board_static_offset) / 30)
-  end
 end

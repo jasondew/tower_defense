@@ -12,11 +12,11 @@
       <div class="text-red-500">Score: <%= @state.score %></div>
     </div>
 
-    <div id="board-container" class="flex flex-col items-center py-4 bg-neutral-300 h-full">
+    <div id="board-container" phx-hook="TrackMousePosition" class="flex flex-col items-center py-4 bg-neutral-300 h-full">
       <div
         id="board"
         phx-click="board-click"
-        phx-hook="TrackBoardPosition"
+        phx-hook="TrackBoardDisposition"
         class="
           relative m-auto w-[796px] h-[796px] m-4 bg-gray-200
           border border-gray-500 border-8 border-opacity-50
@@ -24,7 +24,17 @@
         "
       >
         <%= for %{type: type, position: {x, y}} <- @state.towers do %>
-          <.tower type={type} style={"position: absolute; top: #{y * 30}px; left: #{x * 30}px"}/>
+          <.tower
+            type={type}
+            style={"
+              position: absolute;
+              top: #{y}px;
+              left: #{x}px;
+              width: #{@state.board.tile_size * 2}px;
+              height: #{@state.board.tile_size * 2}px;
+              font-size: #{@state.board.tile_size * 1.2}px
+            "}
+          />
         <% end %>
       </div>
     </div>

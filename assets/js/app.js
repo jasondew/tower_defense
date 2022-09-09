@@ -26,25 +26,27 @@ import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
 let Hooks = {}
-Hooks.TrackBoardPosition = {
+Hooks.TrackBoardDisposition = {
   mounted() {
-    this.pushEvent("board-position", this.el.getBoundingClientRect(), (reply, ref) => {})
+    const rect = this.el.getBoundingClientRect();
+    const border = parseFloat(getComputedStyle(this.el).borderTopWidth);
+    const size = rect.bottom - rect.top - 2 * border;
+
+    this.pushEvent("update-board-disposition", {"x": rect.left + border, "y": rect.top + border, "size": size});
+  }
+}
+Hooks.TrackMousePosition = {
+  mounted() {
+    document.addEventListener('mousemove', (event) => {
+      this.pushEvent('update-mouse-position', {"x": event.pageX, "y": event.pageY});
+    });
   }
 }
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   params: {_csrf_token: csrfToken},
-  hooks: Hooks,
-  metadata: {
-    click: (event, element) => {
-      return {
-        altKey: event.altKey,
-        clientX: event.clientX,
-        clientY: event.clientY
-      }
-    }
-  }
+  hooks: Hooks
 })
 
 // Show progress bar on live navigation and form submits
