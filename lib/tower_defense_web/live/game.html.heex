@@ -15,7 +15,6 @@
     <div id="board-container" phx-hook="TrackMousePosition" class="flex flex-col items-center py-4 bg-neutral-300 h-full">
       <div
         id="board"
-        phx-click="board-click"
         phx-hook="TrackBoardDisposition"
         class="
           relative m-auto w-[796px] h-[796px] m-4 bg-gray-200
@@ -26,14 +25,11 @@
         <%= for %{type: type, position: {x, y}} <- @state.towers do %>
           <.tower
             type={type}
-            style={"
-              position: absolute;
-              top: #{y}px;
-              left: #{x}px;
-              width: #{@state.board.tile_size * 2}px;
-              height: #{@state.board.tile_size * 2}px;
-              font-size: #{@state.board.tile_size * 1.2}px
-            "}
+            range={@state.board.tile_size * 2}
+            display_range={true}
+            size={@state.board.tile_size * 2}
+            x={x}
+            y={y}
           />
         <% end %>
       </div>
@@ -81,9 +77,26 @@
           type={type}
           phx-click="select-tower"
           phx-value-type={type}
+          size={30}
           selected={@selected_tower == type}
         />
       <% end %>
     </div>
+
+    <div class="p-2 font-mono text-sm">
+      mouse position: <%= inspect(@mouse_position) %>
+    </div>
   </div>
+
+  <%= if @selected_tower && mouse_over_board(@state.board, @mouse_position) do %>
+    <.tower
+      phx-click="place-tower"
+      type={@selected_tower}
+      range={@state.board.tile_size * 2}
+      display_range={true}
+      size={@state.board.tile_size * 2}
+      x={@mouse_position.x - @state.board.tile_size}
+      y={@mouse_position.y - @state.board.tile_size}
+    />
+  <% end %>
 </main>

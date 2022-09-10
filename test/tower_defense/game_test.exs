@@ -48,14 +48,14 @@ defmodule TowerDefense.GameTest do
     end
   end
 
-  describe "add_tower/3" do
+  describe "place_tower/3" do
     test "adds a tower on the nearest tile" do
       pid = start_supervised!(Game)
 
       Game.set_board_disposition(pid, %{x: 100, y: 50, size: 780})
 
-      assert %{towers: [%{tile_position: {3, 7}, type: :bash}]} =
-               Game.add_tower(pid, :bash, {190, 260})
+      assert %{towers: [%{tile_position: %{x: 3, y: 7}, type: :bash}]} =
+               Game.place_tower(pid, :bash, %{x: 190, y: 260})
     end
   end
 end

@@ -47,9 +47,9 @@ defmodule TowerDefense.Game do
     GenServer.call(pid, {:set_board_disposition, parameters})
   end
 
-  @spec add_tower(pid(), tower, position) :: State.t()
-  def add_tower(pid, tower, position) do
-    GenServer.call(pid, {:add_tower, tower, position})
+  @spec place_tower(pid(), tower, position) :: State.t()
+  def place_tower(pid, tower, position) do
+    GenServer.call(pid, {:place_tower, tower, position})
   end
 
   ## CALLBACKS
@@ -103,16 +103,16 @@ defmodule TowerDefense.Game do
   end
 
   def handle_call(
-        {:add_tower, tower, {x, y}},
+        {:place_tower, tower, position},
         _from,
         %{board: board} = state
       ) do
-    tile_x = tile(x, board.position.x, board.tile_size)
-    tile_y = tile(y, board.position.y, board.tile_size)
+    tile_x = tile(position.x, board.position.x, board.tile_size)
+    tile_y = tile(position.y, board.position.y, board.tile_size)
 
     if tile_x < 0 || tile_y < 0 || tile_x > @tile_count - 2 || tile_y > @tile_count - 2 do
       Logger.warn(
-        "received click event outside of board: at=#{inspect({x, y})} board=#{inspect(board)}"
+        "received click event outside of board: at=#{inspect(position)} board=#{inspect(board)}"
       )
 
       {:reply, state, state}
@@ -126,7 +126,7 @@ defmodule TowerDefense.Game do
             %{
               type: tower,
               position: {tile_x * board.tile_size, tile_y * board.tile_size},
-              tile_position: {tile_x, tile_y}
+              tile_position: %{x: tile_x, y: tile_y}
             }
             | &1
           ]

@@ -87,21 +87,25 @@ defmodule TowerDefenseWeb.Live.Game do
   end
 
   def handle_event(
-        "board-click",
+        "place-tower",
         _params,
         %{
           assigns: %{
             game_pid: game_pid,
+            state: %{board: board},
             selected_tower: tower,
-            mouse_position: position
+            mouse_position: %{x: x, y: y}
           }
         } = socket
       )
       when not is_nil(tower) do
-    {:noreply, assign(socket, state: Game.add_tower(game_pid, tower, position))}
+    {:noreply,
+     assign(socket,
+       state: Game.place_tower(game_pid, tower, %{x: x - board.tile_size, y: y - board.tile_size})
+     )}
   end
 
-  def handle_event("board-click", _params, socket), do: {:noreply, socket}
+  def handle_event("place-tower", _params, socket), do: {:noreply, socket}
 
   def handle_event(
         "update-board-disposition",
@@ -116,8 +120,15 @@ defmodule TowerDefenseWeb.Live.Game do
   end
 
   def handle_event("update-mouse-position", %{"x" => x, "y" => y}, socket) do
-    {:noreply, assign(socket, mouse_position: {x, y})}
+    {:noreply, assign(socket, mouse_position: %{x: x, y: y})}
   end
 
   ## PRIVATE FUNCTIONS
+
+  defp mouse_over_board(board, %{x: x, y: y}) do
+    board.position.x <= x && x <= board.position.x + board.size &&
+      board.position.y <= y && y <= board.position.y + board.size
+  end
+
+  defp mouse_over_board(_board, _mouse_position), do: false
 end
