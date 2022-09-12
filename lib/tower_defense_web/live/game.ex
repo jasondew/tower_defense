@@ -92,7 +92,6 @@ defmodule TowerDefenseWeb.Live.Game do
         %{
           assigns: %{
             game_pid: game_pid,
-            state: %{board: board},
             selected_tower: tower,
             mouse_position: %{x: x, y: y}
           }
@@ -101,7 +100,7 @@ defmodule TowerDefenseWeb.Live.Game do
       when not is_nil(tower) do
     {:noreply,
      assign(socket,
-       state: Game.place_tower(game_pid, tower, %{x: x - board.tile_size, y: y - board.tile_size})
+       state: Game.place_tower(game_pid, tower, %{x: x, y: y})
      )}
   end
 
@@ -126,9 +125,23 @@ defmodule TowerDefenseWeb.Live.Game do
   ## PRIVATE FUNCTIONS
 
   defp mouse_over_board(board, %{x: x, y: y}) do
-    board.position.x <= x && x <= board.position.x + board.size &&
-      board.position.y <= y && y <= board.position.y + board.size
+    # TODO: send this to the Game server to see if a tower can be placed here
+    # specifically, is it on the board? is there another tower there? is it blocking?
+    board.position.x <= x && x <= board.position.x + board.size - board.tile_size &&
+      board.position.y <= y && y <= board.position.y + board.size - board.tile_size
   end
 
   defp mouse_over_board(_board, _mouse_position), do: false
+
+  defp snap_x_to_tile(x, board) do
+    x
+    |> Game.tile_and_position(:x, board)
+    |> Map.get(:position)
+  end
+
+  defp snap_y_to_tile(y, board) do
+    y
+    |> Game.tile_and_position(:y, board)
+    |> Map.get(:position)
+  end
 end

@@ -28,8 +28,8 @@
             range={@state.board.tile_size * 2}
             display_range={true}
             size={@state.board.tile_size * 2}
-            x={x}
-            y={y}
+            x={x - @state.board.position.x}
+            y={y - @state.board.position.y}
           />
         <% end %>
       </div>
@@ -48,7 +48,7 @@
     </div>
   </div>
 
-  <div class={"#{if @state.paused, do: "fixed", else: "hidden"} bg-gray-800 w-3/4 h-full opacity-80 flex items-center"}>
+  <div class={"#{if @state.paused, do: "fixed", else: "hidden"} z-50 bg-gray-800 w-3/4 h-full opacity-80 flex items-center"}>
     <div class="m-auto text-orange-400 text-6xl">Paused...</div>
   </div>
 
@@ -83,20 +83,21 @@
       <% end %>
     </div>
 
-    <div class="p-2 font-mono text-sm">
-      mouse position: <%= inspect(@mouse_position) %>
+    <div class="p-2 font-mono text-sm flex flex-col">
+      <div>mouse position: <%= inspect(@mouse_position) %></div>
+      <div>towers: <%= inspect(@state.towers) %></div>
     </div>
   </div>
 
-  <%= if @selected_tower && mouse_over_board(@state.board, @mouse_position) do %>
+  <%= if !@state.paused && @selected_tower && mouse_over_board(@state.board, @mouse_position) do %>
     <.tower
       phx-click="place-tower"
       type={@selected_tower}
       range={@state.board.tile_size * 2}
       display_range={true}
       size={@state.board.tile_size * 2}
-      x={@mouse_position.x - @state.board.tile_size}
-      y={@mouse_position.y - @state.board.tile_size}
+      x={snap_x_to_tile(@mouse_position.x, @state.board)}
+      y={snap_y_to_tile(@mouse_position.y, @state.board)}
     />
   <% end %>
 </main>

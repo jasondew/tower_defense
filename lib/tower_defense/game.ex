@@ -52,6 +52,22 @@ defmodule TowerDefense.Game do
     GenServer.call(pid, {:place_tower, tower, position})
   end
 
+  @spec tile_and_position(non_neg_integer(), :x | :y, map()) :: %{
+          tile: non_neg_integer(),
+          position: non_neg_integer()
+        }
+  def tile_and_position(x, :x, board) do
+    tile = tile(x, board.position.x, board.tile_size)
+
+    %{tile: tile, position: tile * board.tile_size + board.position.x}
+  end
+
+  def tile_and_position(y, :y, board) do
+    tile = tile(y, board.position.y, board.tile_size)
+
+    %{tile: tile, position: tile * board.tile_size + board.position.y}
+  end
+
   ## CALLBACKS
 
   @impl GenServer
@@ -107,16 +123,10 @@ defmodule TowerDefense.Game do
         _from,
         %{board: board} = state
       ) do
-    tile_x = tile(position.x, board.position.x, board.tile_size)
-    tile_y = tile(position.y, board.position.y, board.tile_size)
+    %{tile: tile_x, position: position_x} = tile_and_position(position.x, :x, board)
+    %{tile: tile_y, position: position_y} = tile_and_position(position.y, :y, board)
 
-    if tile_x < 0 || tile_y < 0 || tile_x > @tile_count - 2 || tile_y > @tile_count - 2 do
-      Logger.warn(
-        "received click event outside of board: at=#{inspect(position)} board=#{inspect(board)}"
-      )
-
-      {:reply, state, state}
-    else
+    if tile_x >= 0 || tile_y >= 0 || tile_x < @tile_count || tile_y < @tile_count do
       updated_state =
         Map.update(
           state,
@@ -125,7 +135,7 @@ defmodule TowerDefense.Game do
           &[
             %{
               type: tower,
-              position: {tile_x * board.tile_size, tile_y * board.tile_size},
+              position: {position_x, position_y},
               tile_position: %{x: tile_x, y: tile_y}
             }
             | &1
@@ -133,6 +143,12 @@ defmodule TowerDefense.Game do
         )
 
       {:reply, updated_state, updated_state}
+    else
+      Logger.warn(
+        "received click event outside of board: at=#{inspect(position)} board=#{inspect(board)}"
+      )
+
+      {:reply, state, state}
     end
   end
 
