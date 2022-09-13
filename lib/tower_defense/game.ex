@@ -3,10 +3,10 @@ defmodule TowerDefense.Game do
 
   require Logger
 
-  alias TowerDefense.Game.State
+  alias TowerDefense.Game.{Board, State}
 
   @type tower :: :pellet | :squirt | :dart | :swarm | :frost | :bash
-  @type position :: {non_neg_integer(), non_neg_integer()}
+  @type position :: %{x: non_neg_integer(), y: non_neg_integer()}
 
   @tile_count 26
 
@@ -52,20 +52,11 @@ defmodule TowerDefense.Game do
     GenServer.call(pid, {:place_tower, tower, position})
   end
 
-  @spec tile_and_position(non_neg_integer(), :x | :y, map()) :: %{
-          tile: non_neg_integer(),
-          position: non_neg_integer()
-        }
-  def tile_and_position(x, :x, board) do
-    tile = tile(x, board.position.x, board.tile_size)
-
-    %{tile: tile, position: tile * board.tile_size + board.position.x}
-  end
-
-  def tile_and_position(y, :y, board) do
-    tile = tile(y, board.position.y, board.tile_size)
-
-    %{tile: tile, position: tile * board.tile_size + board.position.y}
+  @spec attempt_tower_placement(pid(), position) ::
+          {:ok, position}
+          | {:error, :paused | :out_of_bounds}
+  def attempt_tower_placement(pid, position) do
+    GenServer.call(pid, {:attempt_tower_placement, position})
   end
 
   ## CALLBACKS
@@ -123,10 +114,10 @@ defmodule TowerDefense.Game do
         _from,
         %{board: board} = state
       ) do
-    %{tile: tile_x, position: position_x} = tile_and_position(position.x, :x, board)
-    %{tile: tile_y, position: position_y} = tile_and_position(position.y, :y, board)
+    %{tile: tile, position: position} = Board.tile_and_position(position, board)
 
-    if tile_x >= 0 || tile_y >= 0 || tile_x < @tile_count || tile_y < @tile_count do
+    if tile.x >= 0 || tile.y >= 0 || tile.x < @tile_count ||
+         tile.y < @tile_count do
       updated_state =
         Map.update(
           state,
@@ -135,8 +126,8 @@ defmodule TowerDefense.Game do
           &[
             %{
               type: tower,
-              position: {position_x, position_y},
-              tile_position: %{x: tile_x, y: tile_y}
+              position: position,
+              tile: tile
             }
             | &1
           ]
@@ -152,9 +143,50 @@ defmodule TowerDefense.Game do
     end
   end
 
+  def handle_call(
+        {:attempt_tower_placement, _position},
+        _from,
+        %{paused: true} = state
+      ) do
+    {:reply, {:error, :paused}, state}
+  end
+
+  def handle_call(
+        {:attempt_tower_placement, at},
+        _from,
+        %{board: board, towers: towers} = state
+      ) do
+    # TODO: validate other conditions:
+    # - is there another tower there?
+    # - is it blocking?
+    reply =
+      with {_, true} <- {:range, in_range?(board, at)},
+           %{tile: tile, position: position} <-
+             Board.tile_and_position(at, board),
+           {_, false} <- {:colliding, colliding?(tile, towers)} do
+        {:ok, position}
+      else
+        {:range, false} -> {:error, :out_of_bounds}
+        {:colliding, true} -> {:error, :colliding}
+      end
+
+    {:reply, reply, state}
+  end
+
   ## PRIVATE FUNCTIONS
 
-  defp tile(coordinate, offset, tile_size) do
-    trunc((coordinate - offset) / tile_size)
+  defp in_range?(board, %{x: x, y: y}) do
+    board.position.x <= x &&
+      x <= board.position.x + board.size - board.tile_size &&
+      board.position.y <= y &&
+      y <= board.position.y + board.size - board.tile_size
+  end
+
+  defp colliding?(%{x: x, y: y}, towers) do
+    # TODO: fix case where the tower half occluding
+    Enum.any?(towers, fn %{tile: %{x: tower_x, y: tower_y}} ->
+      (x == tower_x - 1 || x == tower_x || x == tower_x + 1) &&
+        (y == tower_y - 1 || y == tower_y || y == tower_y + 1)
+    end)
   end
 end

@@ -22,7 +22,7 @@
           rounded-sm shadow-2xl
         "
       >
-        <%= for %{type: type, position: {x, y}} <- @state.towers do %>
+        <%= for %{type: type, position: %{x: x, y: y}} <- @state.towers do %>
           <.tower
             type={type}
             range={@state.board.tile_size * 2}
@@ -89,15 +89,17 @@
     </div>
   </div>
 
-  <%= if !@state.paused && @selected_tower && mouse_over_board(@state.board, @mouse_position) do %>
-    <.tower
-      phx-click="place-tower"
-      type={@selected_tower}
-      range={@state.board.tile_size * 2}
-      display_range={true}
-      size={@state.board.tile_size * 2}
-      x={snap_x_to_tile(@mouse_position.x, @state.board)}
-      y={snap_y_to_tile(@mouse_position.y, @state.board)}
-    />
+  <%= case attempt_tower_placement(@selected_tower, @mouse_position, @game_pid) do %>
+    <% {:ok, %{position: position}} -> %>
+      <.tower
+        phx-click="place-tower"
+        type={@selected_tower}
+        size={@state.board.tile_size * 2}
+        display_range={true}
+        range={@state.board.tile_size * 2}
+        x={position.x}
+        y={position.y}
+      />
+    <% {:error, _error} -> %>
   <% end %>
 </main>
