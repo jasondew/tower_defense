@@ -3,9 +3,9 @@ defmodule TowerDefense.Game do
 
   require Logger
 
-  alias TowerDefense.Game.{Board, State}
+  alias TowerDefense.Game.{Board, State, Tower}
 
-  @type tower :: :pellet | :squirt | :dart | :swarm | :frost | :bash
+  @type tower_type :: :pellet | :squirt | :dart | :swarm | :frost | :bash
   @type position :: %{x: non_neg_integer(), y: non_neg_integer()}
 
   @tile_count 26
@@ -47,9 +47,9 @@ defmodule TowerDefense.Game do
     GenServer.call(pid, {:set_board_disposition, parameters})
   end
 
-  @spec place_tower(pid(), tower, position) :: State.t()
-  def place_tower(pid, tower, position) do
-    GenServer.call(pid, {:place_tower, tower, position})
+  @spec place_tower(pid(), tower_type, position) :: State.t()
+  def place_tower(pid, type, position) do
+    GenServer.call(pid, {:place_tower, type, position})
   end
 
   @spec attempt_tower_placement(pid(), position) ::
@@ -110,7 +110,7 @@ defmodule TowerDefense.Game do
   end
 
   def handle_call(
-        {:place_tower, tower, position},
+        {:place_tower, type, position},
         _from,
         %{board: board} = state
       ) do
@@ -123,14 +123,7 @@ defmodule TowerDefense.Game do
           state,
           :towers,
           [],
-          &[
-            %{
-              type: tower,
-              position: position,
-              tile: tile
-            }
-            | &1
-          ]
+          &[Tower.new(type, tile, position, board.tile_size) | &1]
         )
 
       {:reply, updated_state, updated_state}
@@ -183,8 +176,7 @@ defmodule TowerDefense.Game do
   end
 
   defp colliding?(%{x: x, y: y}, towers) do
-    # TODO: fix case where the tower half occluding
-    Enum.any?(towers, fn %{tile: %{x: tower_x, y: tower_y}} ->
+    Enum.any?(towers, fn %Tower{tile: %{x: tower_x, y: tower_y}} ->
       (x == tower_x - 1 || x == tower_x || x == tower_x + 1) &&
         (y == tower_y - 1 || y == tower_y || y == tower_y + 1)
     end)

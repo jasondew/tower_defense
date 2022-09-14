@@ -75,7 +75,11 @@ defmodule TowerDefenseWeb.Live.Game do
         _unsigned_params,
         %{assigns: %{game_pid: game_pid}} = socket
       ) do
-    {:noreply, assign(socket, state: Game.reset(game_pid))}
+    {:noreply,
+     assign(socket,
+       selected_tower: nil,
+       state: Game.reset(game_pid)
+     )}
   end
 
   def handle_event(

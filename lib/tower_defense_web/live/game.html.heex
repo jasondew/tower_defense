@@ -22,7 +22,7 @@
           rounded-sm shadow-2xl
         "
       >
-        <%= for %{type: type, position: %{x: x, y: y}} <- @state.towers do %>
+      <%= for %{type: type, position: %{top_left: %{x: x, y: y}}} <- @state.towers do %>
           <.tower
             type={type}
             range={@state.board.tile_size * 2}
@@ -84,8 +84,34 @@
     </div>
 
     <div class="p-2 font-mono text-sm flex flex-col">
-      <div>mouse position: <%= inspect(@mouse_position) %></div>
-      <div>towers: <%= inspect(@state.towers) %></div>
+      <div class="text-lg">DEBUG</div>
+
+      <div>
+        <div class="font-bold text-sm">board:</div>
+        <div class="ml-2">position: <%= inspect(@state.board.position) %></div>
+        <div class="ml-2">size: <%= inspect(@state.board.size) %></div>
+      </div>
+
+      <div>
+        <div class="font-bold text-sm">towers:</div>
+        <%= for tower <- @state.towers do %>
+          <div class="ml-2">
+            <div><%= tower.type %> at <%= inspect(tower.tile) %></div>
+            <div class="ml-2">top_left: <%= inspect tower.position.top_left %></div>
+            <div class="ml-2">bottom_right: <%= inspect tower.position.bottom_right %></div>
+            <div class="ml-2">
+              range:
+              <div class="ml-2">center: <%= inspect tower.range.center %></div>
+              <div class="ml-2">radius: <%= inspect tower.range.radius %></div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div>
+        <div class="font-bold text-sm">mouse position:</div>
+        <div class="ml-2"><%= inspect(@mouse_position) %></div>
+      </div>
     </div>
   </div>
 

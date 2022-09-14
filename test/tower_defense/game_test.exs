@@ -2,6 +2,7 @@ defmodule TowerDefense.GameTest do
   use ExUnit.Case
 
   alias TowerDefense.Game
+  alias TowerDefense.Game.Tower
 
   setup do
     %{pid: start_supervised!(Game)}
@@ -50,10 +51,12 @@ defmodule TowerDefense.GameTest do
 
       assert %{
                towers: [
-                 %{
-                   position: %{x: 190, y: 260},
+                 %Tower{
+                   type: :bash,
                    tile: %{x: 3, y: 7},
-                   type: :bash
+                   position: %{
+                     top_left: %{x: 190, y: 260}
+                   }
                  }
                ]
              } = Game.place_tower(pid, :bash, %{x: 195, y: 265})
