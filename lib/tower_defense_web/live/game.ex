@@ -3,6 +3,9 @@ defmodule TowerDefenseWeb.Live.Game do
 
   import TowerDefenseWeb.Live.Components
 
+  alias TowerDefense.Game
+  alias TowerDefense.Game.Tower
+
   @one_second 1_000
 
   @status_colors [
@@ -27,8 +30,6 @@ defmodule TowerDefenseWeb.Live.Game do
   ]
 
   @towers [:pellet, :squirt, :dart, :swarm, :frost, :bash]
-
-  alias TowerDefense.Game
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do

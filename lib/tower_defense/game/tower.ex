@@ -16,6 +16,16 @@ defmodule TowerDefense.Game.Tower do
     }
   end
 
+  def inside?(
+        %__MODULE__{
+          position: %{top_left: top_left, bottom_right: bottom_right}
+        },
+        position
+      ) do
+    top_left.x <= position.x && position.x <= bottom_right.x &&
+      top_left.y <= position.y && position.y <= bottom_right.y
+  end
+
   ## PRIVATE FUNCTIONS
 
   defp bottom_right_position(%{x: x, y: y}, tile_size) do

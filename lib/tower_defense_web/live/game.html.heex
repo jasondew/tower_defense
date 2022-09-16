@@ -22,14 +22,14 @@
           rounded-sm shadow-2xl
         "
       >
-      <%= for %{type: type, position: %{top_left: %{x: x, y: y}}} <- @state.towers do %>
+      <%= for tower <- @state.towers do %>
           <.tower
-            type={type}
+            type={tower.type}
             range={@state.board.tile_size * 2}
-            display_range={true}
+            display_range={Tower.inside?(tower, @mouse_position)}
             size={@state.board.tile_size * 2}
-            x={x - @state.board.position.x}
-            y={y - @state.board.position.y}
+            x={tower.position.top_left.x - @state.board.position.x}
+            y={tower.position.top_left.y - @state.board.position.y}
           />
         <% end %>
       </div>
