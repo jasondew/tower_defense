@@ -136,6 +136,14 @@ defmodule TowerDefenseWeb.Live.Game do
     {:noreply, assign(socket, mouse_position: %{x: x, y: y})}
   end
 
+  def handle_event(
+        "send-next-level",
+        _params,
+        %{assigns: %{game_pid: game_pid}} = socket
+      ) do
+    {:noreply, assign(socket, state: Game.send_next_level(game_pid))}
+  end
+
   ## PRIVATE FUNCTIONS
 
   defp attempt_tower_placement(_tower, _position, nil),

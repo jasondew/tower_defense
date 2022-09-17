@@ -22,7 +22,7 @@
           rounded-sm shadow-2xl
         "
       >
-      <%= for tower <- @state.towers do %>
+        <%= for tower <- @state.towers do %>
           <.tower
             type={tower.type}
             range={@state.board.tile_size * 2}
@@ -30,6 +30,15 @@
             size={@state.board.tile_size * 2}
             x={tower.position.top_left.x - @state.board.position.x}
             y={tower.position.top_left.y - @state.board.position.y}
+          />
+        <% end %>
+
+        <%= for creep <- @state.creeps do %>
+          <.creep
+            type={creep.type}
+            health={creep.health}
+            x={creep.position.x}
+            y={creep.position.y}
           />
         <% end %>
       </div>
@@ -68,7 +77,7 @@
           RESET
         </button>
       </div>
-      <div class="border border-2 border-orange-400 text-center">Send next level</div>
+      <div phx-click="send-next-level" class="border border-2 border-orange-400 text-center">Send next level</div>
     </div>
 
     <div id="towers" class="flex justify-between p-2">
@@ -83,7 +92,7 @@
       <% end %>
     </div>
 
-    <div class="p-2 font-mono text-sm flex flex-col">
+    <div class="p-2 font-mono text-sm flex flex-col gap-4">
       <div class="text-lg">DEBUG</div>
 
       <div>
@@ -104,6 +113,15 @@
               <div class="ml-2">center: <%= inspect tower.range.center %></div>
               <div class="ml-2">radius: <%= inspect tower.range.radius %></div>
             </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div>
+        <div class="font-bold text-sm">creeps:</div>
+        <%= for creep <- @state.creeps do %>
+          <div class="ml-2">
+            <%= creep.type %> at <%= inspect(creep.position) %>
           </div>
         <% end %>
       </div>

@@ -3,7 +3,7 @@ defmodule TowerDefense.Game do
 
   require Logger
 
-  alias TowerDefense.Game.{Board, State, Tower}
+  alias TowerDefense.Game.{Board, Creep, State, Tower}
 
   @type tower_type :: :pellet | :squirt | :dart | :swarm | :frost | :bash
   @type position :: %{x: non_neg_integer(), y: non_neg_integer()}
@@ -59,6 +59,11 @@ defmodule TowerDefense.Game do
     GenServer.call(pid, {:attempt_tower_placement, position})
   end
 
+  @spec send_next_level(pid()) :: State.t()
+  def send_next_level(pid) do
+    GenServer.call(pid, :send_next_level)
+  end
+
   ## CALLBACKS
 
   @impl GenServer
@@ -71,7 +76,8 @@ defmodule TowerDefense.Game do
     if state.paused do
       {:reply, state, state}
     else
-      updated_state = Map.update(state, :time, 1, &(&1 + 1))
+      updated_state = State.update(state)
+
       {:reply, updated_state, updated_state}
     end
   end
@@ -149,9 +155,7 @@ defmodule TowerDefense.Game do
         _from,
         %{board: board, towers: towers} = state
       ) do
-    # TODO: validate other conditions:
-    # - is there another tower there?
-    # - is it blocking?
+    # TODO: validate it isn't blocking
     reply =
       with {_, true} <- {:range, in_range?(board, at)},
            %{tile: tile, position: position} <-
@@ -166,7 +170,27 @@ defmodule TowerDefense.Game do
     {:reply, reply, state}
   end
 
+  def handle_call(:send_next_level, _from, state) do
+    updated_state =
+      state
+      |> Map.update(
+        :creeps,
+        [],
+        &Enum.concat(next_level_creeps(state), &1)
+      )
+      |> Map.update(:level, 1, &(&1 + 1))
+
+    {:reply, updated_state, updated_state}
+  end
+
   ## PRIVATE FUNCTIONS
+
+  defp next_level_creeps(_state) do
+    # TODO vary depending on level
+    # TODO figure out entrance
+
+    [Creep.new(:normal, %{x: 0, y: 440})]
+  end
 
   defp in_range?(board, %{x: x, y: y}) do
     board.position.x <= x &&

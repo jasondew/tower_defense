@@ -17,7 +17,7 @@ defmodule TowerDefenseWeb.Live.Components do
         style={style(assigns)}
         {assigns_to_attributes(assigns, [:size, :type, :range, :display_range, :x, :y])}
       >
-        <%= symbol(assigns.type) %>
+        <%= tower_symbol(assigns.type) %>
       </div>
 
       <%= if assigns[:display_range] do %>
@@ -31,11 +31,26 @@ defmodule TowerDefenseWeb.Live.Components do
     """
   end
 
+  def creep(assigns) do
+    ~H"""
+    <div style={style(assigns)} class="rotate-90"><%= creep_symbol(@type) %></div>
+    """
+  end
+
   ## PRIVATE FUNCTIONS
 
   defp style(%{size: size, x: x, y: y}) do
     """
       #{style(%{size: size})}
+      #{style(%{x: x, y: y})}
+      position: absolute;
+      left: #{x}px;
+      top: #{y}px;
+    """
+  end
+
+  defp style(%{x: x, y: y}) do
+    """
       position: absolute;
       left: #{x}px;
       top: #{y}px;
@@ -60,10 +75,12 @@ defmodule TowerDefenseWeb.Live.Components do
     """
   end
 
-  defp symbol(:pellet), do: "→"
-  defp symbol(:squirt), do: "▶︎"
-  defp symbol(:dart), do: "⇞"
-  defp symbol(:swarm), do: "⏅"
-  defp symbol(:frost), do: "❄︎"
-  defp symbol(:bash), do: "◎"
+  defp tower_symbol(:pellet), do: "→"
+  defp tower_symbol(:squirt), do: "▶︎"
+  defp tower_symbol(:dart), do: "⇞"
+  defp tower_symbol(:swarm), do: "⏅"
+  defp tower_symbol(:frost), do: "❄︎"
+  defp tower_symbol(:bash), do: "◎"
+
+  defp creep_symbol(:normal), do: "🐞"
 end

@@ -103,4 +103,11 @@ defmodule TowerDefense.GameTest do
       end
     end
   end
+
+  describe "send_next_level/1" do
+    test "introduces the next level's creeps into the state and increments the level",
+         %{pid: pid} do
+      assert %{level: 2, creeps: [_creep | _rest]} = Game.send_next_level(pid)
+    end
+  end
 end
