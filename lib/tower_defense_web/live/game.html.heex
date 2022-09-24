@@ -37,9 +37,13 @@
           <.creep
             type={creep.type}
             health={creep.health}
-            x={creep.position.x}
-            y={creep.position.y}
+            x={creep.position.x - @state.board.position.top_left.x}
+            y={creep.position.y - @state.board.position.top_left.y}
           />
+        <% end %>
+
+        <%= for tile <- @state.path do %>
+          <.tile x={tile.x} y={tile.y} size={@state.board.tile_size}/>
         <% end %>
       </div>
     </div>
@@ -107,11 +111,9 @@
           <div class="ml-2">
             <div>
               <%= tower.type %>
-              at (<%= tower.tiles |> Enum.map(& &1.x) |> Enum.min() %>-<%= tower.tiles |> Enum.map(& &1.x) |> Enum.max() %>,
-              <%= tower.tiles |> Enum.map(& &1.y) |> Enum.min() %>-<%= tower.tiles |> Enum.map(& &1.y) |> Enum.max() %>)
+              at (<%= tower.tiles |> Enum.map(& &1.x) |> Enum.min() %>,
+              <%= tower.tiles |> Enum.map(& &1.y) |> Enum.min() %>)
             </div>
-            <div class="ml-2">top_left: <%= inspect tower.position.top_left %></div>
-            <div class="ml-2">bottom_right: <%= inspect tower.position.bottom_right %></div>
             <div class="ml-2">
               range:
               <div class="ml-2">center: <%= inspect tower.range.center %></div>
@@ -131,8 +133,24 @@
       </div>
 
       <div>
+        <div class="font-bold text-sm">path:</div>
+        <div class="ml-2"> <%= inspect(@state.path) %> </div>
+      </div>
+
+      <div>
         <div class="font-bold text-sm">mouse position:</div>
-        <div class="ml-2"><%= inspect(@mouse_position) %></div>
+        <div class="ml-2">raw: <%= inspect(@mouse_position) %></div>
+        <div class="ml-2">tile:
+          <%=
+            if @mouse_position do
+              inspect(Tile.from_position(
+                @mouse_position,
+                @state.board.position.top_left,
+                @state.board.tile_size
+              ))
+            end
+          %>
+        </div>
       </div>
     </div>
   </div>

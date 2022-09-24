@@ -18,3 +18,9 @@ defmodule TowerDefense.Game.Tile do
     )
   end
 end
+
+defimpl Inspect, for: TowerDefense.Game.Tile do
+  def inspect(%{x: x, y: y}, _opts) do
+    "#(#{x}, #{y})"
+  end
+end

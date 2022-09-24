@@ -4,7 +4,7 @@ defmodule TowerDefenseWeb.Live.Game do
   import TowerDefenseWeb.Live.Components
 
   alias TowerDefense.Game
-  alias TowerDefense.Game.Tower
+  alias TowerDefense.Game.{Tile, Tower}
 
   @one_second 1_000
 

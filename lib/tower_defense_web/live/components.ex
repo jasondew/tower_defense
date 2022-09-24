@@ -37,6 +37,12 @@ defmodule TowerDefenseWeb.Live.Components do
     """
   end
 
+  def tile(assigns) do
+    ~H"""
+    <div style={tile_style(assigns)} class="bg-orange-500 opacity-10"></div>
+    """
+  end
+
   ## PRIVATE FUNCTIONS
 
   defp style(%{size: size, x: x, y: y}) do
@@ -72,6 +78,16 @@ defmodule TowerDefenseWeb.Live.Components do
       top: #{y - range}px;
       width: #{size + 2 * range}px;
       height: #{size + 2 * range}px;
+    """
+  end
+
+  defp tile_style(%{x: x, y: y, size: size}) do
+    """
+      position: absolute;
+      left: #{x * size}px;
+      top: #{y * size}px;
+      width: #{size}px;
+      height: #{size}px;
     """
   end
 

@@ -2,10 +2,18 @@ defmodule TowerDefense.GameTest do
   use ExUnit.Case
 
   alias TowerDefense.Game
-  alias TowerDefense.Game.Tower
+  alias TowerDefense.Game.{Tower, Tile}
 
   setup do
     %{pid: start_supervised!(Game)}
+  end
+
+  describe "init/1" do
+    test "sets the path", %{pid: pid} do
+      assert %{path: path} = Game.get_state(pid)
+      assert List.first(path) == Tile.new(0, 13)
+      assert List.last(path) == Tile.new(25, 13)
+    end
   end
 
   describe "tick/1" do
@@ -66,6 +74,12 @@ defmodule TowerDefense.GameTest do
                  }
                ]
              } = Game.place_tower(pid, :bash, %{x: 195, y: 265})
+    end
+
+    test "updates the path", %{pid: pid} do
+      %{path: old_path} = Game.get_state(pid)
+      assert %{path: new_path} = Game.place_tower(pid, :bash, %{x: 130, y: 130})
+      assert old_path != new_path
     end
   end
 

@@ -9,7 +9,8 @@ defmodule TowerDefense.Game.State do
             paused: true,
             board: %Board{},
             creeps: [],
-            towers: []
+            towers: [],
+            path: []
 
   alias TowerDefense.Game.Creep
 
