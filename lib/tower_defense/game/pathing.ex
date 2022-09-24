@@ -103,14 +103,15 @@ defmodule TowerDefense.Game.Pathing do
     abs(a.x - b.x) + abs(a.y - b.y)
   end
 
-  defp neighbors(path_state) do
-    for x <- (path_state.current.x - 1)..(path_state.current.x + 1),
-        y <- (path_state.current.y - 1)..(path_state.current.y + 1),
-        !(x == path_state.current.y && y == path_state.current.y),
+  defp neighbors(%{current: current} = path_state) do
+    for x <- (current.x - 1)..(current.x + 1),
+        y <- (current.y - 1)..(current.y + 1),
+        !(x == current.y && y == current.y),
         x >= 0,
         y >= 0,
         x < path_state.tile_count,
         y < path_state.tile_count,
+        abs(x - current.x) + abs(y - current.y) == 1,
         Tile.new(x, y) not in path_state.barriers do
       Tile.new(x, y)
     end

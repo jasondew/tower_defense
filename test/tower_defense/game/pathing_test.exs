@@ -9,7 +9,9 @@ defmodule TowerDefense.Game.PathingTest do
                {:ok,
                 [
                   Tile.new(0, 0),
-                  Tile.new(1, 1),
+                  Tile.new(1, 0),
+                  Tile.new(2, 0),
+                  Tile.new(2, 1),
                   Tile.new(2, 2)
                 ]}
     end
@@ -28,6 +30,7 @@ defmodule TowerDefense.Game.PathingTest do
                 [
                   Tile.new(0, 0),
                   Tile.new(1, 0),
+                  Tile.new(2, 0),
                   Tile.new(2, 1),
                   Tile.new(2, 2)
                 ]}

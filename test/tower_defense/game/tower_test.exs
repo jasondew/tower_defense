@@ -1,28 +1,44 @@
 defmodule TowerDefense.Game.TowerTest do
   use ExUnit.Case
 
-  alias TowerDefense.Game.Tower
+  alias TowerDefense.Game.{Position, Tile, Tower}
 
   describe "new/3" do
     test "returns a Tower struct" do
       assert %Tower{
                type: :bash,
-               tile: %{x: 3, y: 7},
+               tiles: [
+                 %Tile{x: 3, y: 7},
+                 %Tile{x: 4, y: 7},
+                 %Tile{x: 3, y: 8},
+                 %Tile{x: 4, y: 8}
+               ],
                position: %{
-                 top_left: %{x: 50, y: 70},
-                 bottom_right: %{x: 69, y: 89}
+                 top_left: %Position{x: 50, y: 70},
+                 bottom_right: %Position{x: 69, y: 89}
                },
                range: %{
-                 center: %{x: 60, y: 80},
+                 center: %Position{x: 60, y: 80},
                  radius: 20
                }
-             } = Tower.new(:bash, %{x: 3, y: 7}, %{x: 50, y: 70}, 10)
+             } = Tower.new(:bash, Tile.new(3, 7), Position.new(50, 70), 10)
+    end
+  end
+
+  describe "tiles_covered/1" do
+    test "returns the list of tiles covered by a tower at the given tile" do
+      assert Tower.tiles_covered(Tile.new(1, 1)) == [
+               Tile.new(1, 1),
+               Tile.new(2, 1),
+               Tile.new(1, 2),
+               Tile.new(2, 2)
+             ]
     end
   end
 
   describe "inside?/2" do
     test "returns true when the position is inside of the tower" do
-      tower = Tower.new(:squirt, %{x: 0, y: 0}, %{x: 50, y: 50}, 10)
+      tower = Tower.new(:squirt, %Tile{x: 0, y: 0}, %{x: 50, y: 50}, 10)
 
       for x <- 50..69, y <- 50..69 do
         assert Tower.inside?(tower, %{x: x, y: y})
@@ -31,7 +47,7 @@ defmodule TowerDefense.Game.TowerTest do
 
     test "returns false when the position is outside of the tower" do
       refute Tower.inside?(
-               Tower.new(:squirt, %{x: 0, y: 0}, %{x: 50, y: 50}, 10),
+               Tower.new(:squirt, Tile.new(0, 0), %{x: 50, y: 50}, 10),
                %{x: 70, y: 70}
              )
     end

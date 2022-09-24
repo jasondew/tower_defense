@@ -3,7 +3,7 @@ defmodule TowerDefense.Game do
 
   require Logger
 
-  alias TowerDefense.Game.{Board, Creep, State, Tower}
+  alias TowerDefense.Game.{Creep, Pathing, Position, State, Tile, Tower}
 
   @type tower_type :: :pellet | :squirt | :dart | :swarm | :frost | :bash
   @type position :: %{x: non_neg_integer(), y: non_neg_integer()}
@@ -48,15 +48,15 @@ defmodule TowerDefense.Game do
   end
 
   @spec place_tower(pid(), tower_type, position) :: State.t()
-  def place_tower(pid, type, position) do
-    GenServer.call(pid, {:place_tower, type, position})
+  def place_tower(pid, type, %{x: x, y: y}) do
+    GenServer.call(pid, {:place_tower, type, Position.new(x, y)})
   end
 
   @spec attempt_tower_placement(pid(), position) ::
           {:ok, position}
           | {:error, :paused | :out_of_bounds}
-  def attempt_tower_placement(pid, position) do
-    GenServer.call(pid, {:attempt_tower_placement, position})
+  def attempt_tower_placement(pid, %{x: x, y: y}) do
+    GenServer.call(pid, {:attempt_tower_placement, Position.new(x, y)})
   end
 
   @spec send_next_level(pid()) :: State.t()
@@ -120,16 +120,22 @@ defmodule TowerDefense.Game do
         _from,
         %{board: board} = state
       ) do
-    %{tile: tile, position: position} = Board.tile_and_position(position, board)
+    if in_range?(board, position) do
+      top_left_tile =
+        Tile.from_position(position, board.position, board.tile_size)
 
-    if tile.x >= 0 || tile.y >= 0 || tile.x < @tile_count ||
-         tile.y < @tile_count do
+      top_left_position =
+        Position.from_tile(top_left_tile, board.position, board.tile_size)
+
       updated_state =
         Map.update(
           state,
           :towers,
           [],
-          &[Tower.new(type, tile, position, board.tile_size) | &1]
+          &[
+            Tower.new(type, top_left_tile, top_left_position, board.tile_size)
+            | &1
+          ]
         )
 
       {:reply, updated_state, updated_state}
@@ -155,16 +161,19 @@ defmodule TowerDefense.Game do
         _from,
         %{board: board, towers: towers} = state
       ) do
-    # TODO: validate it isn't blocking
     reply =
       with {_, true} <- {:range, in_range?(board, at)},
-           %{tile: tile, position: position} <-
-             Board.tile_and_position(at, board),
-           {_, false} <- {:colliding, colliding?(tile, towers)} do
-        {:ok, position}
+           top_left_tile =
+             Tile.from_position(at, board.position, board.tile_size),
+           top_left_position =
+             Position.from_tile(top_left_tile, board.position, board.tile_size),
+           {_, false} <- {:colliding, colliding?(top_left_tile, towers)},
+           {_, false} <- {:blocking, blocking?(top_left_tile, towers)} do
+        {:ok, top_left_position}
       else
         {:range, false} -> {:error, :out_of_bounds}
         {:colliding, true} -> {:error, :colliding}
+        {:blocking, true} -> {:error, :blocking}
       end
 
     {:reply, reply, state}
@@ -199,10 +208,25 @@ defmodule TowerDefense.Game do
       y <= board.position.y + board.size - board.tile_size
   end
 
-  defp colliding?(%{x: x, y: y}, towers) do
-    Enum.any?(towers, fn %Tower{tile: %{x: tower_x, y: tower_y}} ->
-      (x == tower_x - 1 || x == tower_x || x == tower_x + 1) &&
-        (y == tower_y - 1 || y == tower_y || y == tower_y + 1)
+  defp colliding?(tile, towers) do
+    Enum.any?(Tower.tiles_covered(tile), fn tile ->
+      Enum.any?(towers, &Enum.member?(&1.tiles, tile))
     end)
+  end
+
+  defp blocking?(tile, towers) do
+    tower_tiles =
+      towers
+      |> Enum.flat_map(& &1.tiles)
+      |> Enum.concat(Tower.tiles_covered(tile))
+
+    middle = round(@tile_count / 2)
+    start_tile = Tile.new(0, middle)
+    end_tile = Tile.new(@tile_count - 1, middle)
+
+    case Pathing.find_path(start_tile, end_tile, tower_tiles, @tile_count) do
+      {:ok, _path} -> false
+      {:error, :no_path} -> true
+    end
   end
 end

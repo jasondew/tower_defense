@@ -105,7 +105,11 @@
         <div class="font-bold text-sm">towers:</div>
         <%= for tower <- @state.towers do %>
           <div class="ml-2">
-            <div><%= tower.type %> at <%= inspect(tower.tile) %></div>
+            <div>
+              <%= tower.type %>
+              at (<%= tower.tiles |> Enum.map(& &1.x) |> Enum.min() %>-<%= tower.tiles |> Enum.map(& &1.x) |> Enum.max() %>,
+              <%= tower.tiles |> Enum.map(& &1.y) |> Enum.min() %>-<%= tower.tiles |> Enum.map(& &1.y) |> Enum.max() %>)
+            </div>
             <div class="ml-2">top_left: <%= inspect tower.position.top_left %></div>
             <div class="ml-2">bottom_right: <%= inspect tower.position.bottom_right %></div>
             <div class="ml-2">

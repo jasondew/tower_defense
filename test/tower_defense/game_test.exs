@@ -53,7 +53,6 @@ defmodule TowerDefense.GameTest do
                towers: [
                  %Tower{
                    type: :bash,
-                   tile: %{x: 3, y: 7},
                    position: %{
                      top_left: %{x: 190, y: 260}
                    }
@@ -101,6 +100,18 @@ defmodule TowerDefense.GameTest do
         assert {:error, :colliding} =
                  Game.attempt_tower_placement(pid, %{x: x, y: y})
       end
+    end
+
+    test "returns an error tuple when this tower would be blocking", %{pid: pid} do
+      Game.toggle_pause(pid)
+
+      # place towers along the y-axis at x=10, y=0...220
+      for y_multiplier <- 0..11 do
+        Game.place_tower(pid, :squirt, %{x: 10, y: y_multiplier * 20})
+      end
+
+      assert {:error, :blocking} =
+               Game.attempt_tower_placement(pid, %{x: 10, y: 240})
     end
   end
 
