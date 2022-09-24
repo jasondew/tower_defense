@@ -1,152 +1,125 @@
 defmodule TowerDefense.Game.Pathing do
   @moduledoc """
-    inspired by the fantastic blog post found here:
+    uses an A* algorithm inspired by the fantastic blog post found here:
     https://www.redblobgames.com/pathfinding/a-star/introduction.html
   """
 
-  alias __MODULE__.PriorityQueue
-  alias TowerDefense.Game.Tile
+  alias __MODULE__.PathState
+  alias TowerDefense.Game.{PriorityQueue, Tile}
 
-  @spec find_path(non_neg_integer(), Tile.t(), Tile.t()) ::
+  @max_iterations 10_000
+
+  @spec find_path(Tile.t(), Tile.t(), [Tile.t()], non_neg_integer()) ::
           {:ok, [Tile.t()]} | {:error, :no_path}
-  def find_path(grid_size, from, to) do
-    max_iterations = grid_size * grid_size
+  def find_path(start, destination, barriers, tile_count) do
+    path_state = PathState.new(start, destination, barriers, tile_count)
 
-    frontier =
-      (grid_size * 2)
-      |> PriorityQueue.new()
-      |> PriorityQueue.put(0, from)
+    case Enum.reduce_while(
+           1..@max_iterations,
+           path_state,
+           fn _iteration, path_state -> explore(path_state) end
+         ) do
+      nil ->
+        {:error, :no_path}
 
-    path_and_costs = %{from => {nil, 0}}
+      path_list ->
+        path =
+          path_list
+          |> trace(destination)
+          |> Enum.reverse()
 
-    path_and_costs =
-      Enum.reduce_while(
-        1..max_iterations,
-        {frontier, path_and_costs},
-        fn _iteration, {frontier, path_and_costs} ->
-          {current, frontier} = PriorityQueue.get(frontier)
-
-          if current == to do
-            {:halt, path_and_costs}
-          else
-            {:cont,
-             Enum.reduce(
-               neighbors(current, grid_size),
-               {frontier, path_and_costs},
-               fn next, {frontier, path_and_costs} ->
-                 {_current, cost_to_current} = Map.get(path_and_costs, current)
-                 new_cost = cost_to_current + 1
-
-                 case Map.get(path_and_costs, next) do
-                   nil ->
-                     update_frontier_and_path(
-                       frontier,
-                       path_and_costs,
-                       current,
-                       next,
-                       to,
-                       new_cost
-                     )
-
-                   {_from, cost_to_next} ->
-                     if new_cost < cost_to_next do
-                       update_frontier_and_path(
-                         frontier,
-                         path_and_costs,
-                         current,
-                         next,
-                         to,
-                         new_cost
-                       )
-                     else
-                       {frontier, path_and_costs}
-                     end
-                 end
-               end
-             )}
-          end
-        end
-      )
-
-    path_and_costs
-    |> trace_path(to)
-    |> Enum.reverse()
+        {:ok, path}
+    end
   end
 
   ## PRIVATE FUNCTIONS
 
-  defp update_frontier_and_path(
-         frontier,
-         path_and_costs,
-         current,
-         next,
-         to,
-         new_cost
-       ) do
-    priority = new_cost + heuristic_cost(next, to)
-    frontier = PriorityQueue.put(frontier, priority, next)
-    path_and_costs = Map.put(path_and_costs, next, {current, new_cost})
+  defmodule PathState do
+    defstruct [:frontier, :path, :barriers, :tile_count, :destination, :current]
 
-    {frontier, path_and_costs}
+    def new(start, destination, barriers, tile_count) do
+      %__MODULE__{
+        frontier: PriorityQueue.put(PriorityQueue.new(), 0, start),
+        path: %{start => {nil, 0}},
+        barriers: barriers,
+        tile_count: tile_count,
+        destination: destination,
+        current: nil
+      }
+    end
+
+    def update(%__MODULE__{} = path_state, updates) do
+      Map.merge(path_state, Map.new(updates))
+    end
+  end
+
+  defp explore(path_state) do
+    case PriorityQueue.get(path_state.frontier) do
+      nil ->
+        {:halt, nil}
+
+      {current, frontier} ->
+        if current == path_state.destination do
+          {:halt, path_state.path}
+        else
+          {:cont,
+           path_state
+           |> PathState.update(current: current, frontier: frontier)
+           |> explore_neighbors()}
+        end
+    end
+  end
+
+  defp explore_neighbors(path_state) do
+    Enum.reduce(neighbors(path_state), path_state, fn next, path_state ->
+      {_current, cost_to_current} = Map.get(path_state.path, path_state.current)
+      new_cost = cost_to_current + 1
+
+      case Map.get(path_state.path, next) do
+        nil ->
+          update_fronter_and_path(path_state, next, new_cost)
+
+        {_start, cost_to_next} ->
+          if new_cost < cost_to_next do
+            update_fronter_and_path(path_state, next, new_cost)
+          else
+            path_state
+          end
+      end
+    end)
+  end
+
+  defp update_fronter_and_path(path_state, next, new_cost) do
+    priority = new_cost + heuristic_cost(next, path_state.destination)
+
+    PathState.update(path_state,
+      frontier: PriorityQueue.put(path_state.frontier, priority, next),
+      path: Map.put(path_state.path, next, {path_state.current, new_cost})
+    )
   end
 
   defp heuristic_cost(a, b) do
+    # Manhattan distance
     abs(a.x - b.x) + abs(a.y - b.y)
   end
 
-  defp neighbors(%{x: xx, y: yy}, max) do
-    for x <- (xx - 1)..(xx + 1),
-        y <- (yy - 1)..(yy + 1),
-        !(x == xx && y == yy),
+  defp neighbors(path_state) do
+    for x <- (path_state.current.x - 1)..(path_state.current.x + 1),
+        y <- (path_state.current.y - 1)..(path_state.current.y + 1),
+        !(x == path_state.current.y && y == path_state.current.y),
         x >= 0,
         y >= 0,
-        x < max,
-        y < max do
+        x < path_state.tile_count,
+        y < path_state.tile_count,
+        Tile.new(x, y) not in path_state.barriers do
       Tile.new(x, y)
     end
   end
 
-  defp trace_path(path_and_costs, to) do
-    case Map.get(path_and_costs, to) do
+  defp trace(path, destination) do
+    case Map.get(path, destination) do
       nil -> []
-      {from, _cost} -> [to | trace_path(path_and_costs, from)]
-    end
-  end
-
-  defmodule PriorityQueue do
-    defstruct [:max_priority, :tree]
-
-    def new(max_priority) do
-      tree =
-        Enum.reduce(0..max_priority, :gb_trees.empty(), fn key, tree ->
-          :gb_trees.insert(key, [], tree)
-        end)
-
-      %__MODULE__{max_priority: max_priority, tree: tree}
-    end
-
-    def get(priority_queue, priority \\ 0)
-    def get(%__MODULE__{max_priority: max_priority}, max_priority), do: nil
-
-    def get(%__MODULE__{tree: tree} = priority_queue, priority) do
-      case :gb_trees.get(priority, tree) do
-        [] ->
-          get(priority_queue, priority + 1)
-
-        [head | rest] ->
-          {head, update(priority, rest, tree)}
-      end
-    end
-
-    def put(%__MODULE__{tree: tree}, priority, value) do
-      values = :gb_trees.get(priority, tree)
-      update(priority, [value | values], tree)
-    end
-
-    ## PRIVATE FUNCTIONS
-
-    defp update(priority, value, tree) do
-      %__MODULE__{tree: :gb_trees.update(priority, value, tree)}
+      {from, _cost} -> [destination | trace(path, from)]
     end
   end
 end
