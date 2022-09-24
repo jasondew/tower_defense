@@ -40,8 +40,15 @@ defmodule TowerDefense.GameTest do
 
   describe "set_board_disposition/2" do
     test "sets the board parameters", %{pid: pid} do
-      assert %{board: %{position: %{x: 100, y: 50}, size: 780, tile_size: 30}} =
-               Game.set_board_disposition(pid, %{x: 100, y: 50, size: 780})
+      assert %{
+               board: %{
+                 position: %{
+                   top_left: %{x: 100, y: 50},
+                   bottom_right: %{x: 879, y: 829}
+                 },
+                 tile_size: 30
+               }
+             } = Game.set_board_disposition(pid, %{x: 100, y: 50, size: 780})
     end
   end
 
@@ -88,6 +95,10 @@ defmodule TowerDefense.GameTest do
 
       assert {:error, :out_of_bounds} =
                Game.attempt_tower_placement(pid, %{x: 260, y: 261})
+
+      # partially out-of-bounds
+      assert {:error, :out_of_bounds} =
+               Game.attempt_tower_placement(pid, %{x: 250, y: 250})
     end
 
     test "returns an error tuple when colliding with another tower", %{pid: pid} do

@@ -3,7 +3,7 @@ defmodule TowerDefense.Game do
 
   require Logger
 
-  alias TowerDefense.Game.{Creep, Pathing, Position, State, Tile, Tower}
+  alias TowerDefense.Game.{Board, Creep, Pathing, Position, State, Tile, Tower}
 
   @type tower_type :: :pellet | :squirt | :dart | :swarm | :frost | :bash
   @type position :: %{x: non_neg_integer(), y: non_neg_integer()}
@@ -103,9 +103,11 @@ defmodule TowerDefense.Game do
       ) do
     if rem(size, @tile_count) == 0 do
       updated_state =
-        Map.put(state, :board, %{
-          position: %{x: x, y: y},
-          size: size,
+        Map.put(state, :board, %Board{
+          position: %{
+            top_left: Position.new(x, y),
+            bottom_right: Position.new(x + size - 1, y + size - 1)
+          },
           tile_size: div(size, @tile_count)
         })
 
@@ -122,10 +124,14 @@ defmodule TowerDefense.Game do
       ) do
     if in_range?(board, position) do
       top_left_tile =
-        Tile.from_position(position, board.position, board.tile_size)
+        Tile.from_position(position, board.position.top_left, board.tile_size)
 
       top_left_position =
-        Position.from_tile(top_left_tile, board.position, board.tile_size)
+        Position.from_tile(
+          top_left_tile,
+          board.position.top_left,
+          board.tile_size
+        )
 
       updated_state =
         Map.update(
@@ -164,9 +170,13 @@ defmodule TowerDefense.Game do
     reply =
       with {_, true} <- {:range, in_range?(board, at)},
            top_left_tile =
-             Tile.from_position(at, board.position, board.tile_size),
+             Tile.from_position(at, board.position.top_left, board.tile_size),
            top_left_position =
-             Position.from_tile(top_left_tile, board.position, board.tile_size),
+             Position.from_tile(
+               top_left_tile,
+               board.position.top_left,
+               board.tile_size
+             ),
            {_, false} <- {:colliding, colliding?(top_left_tile, towers)},
            {_, false} <- {:blocking, blocking?(top_left_tile, towers)} do
         {:ok, top_left_position}
@@ -201,11 +211,15 @@ defmodule TowerDefense.Game do
     [Creep.new(:normal, %{x: 0, y: 440})]
   end
 
-  defp in_range?(board, %{x: x, y: y}) do
-    board.position.x <= x &&
-      x <= board.position.x + board.size - board.tile_size &&
-      board.position.y <= y &&
-      y <= board.position.y + board.size - board.tile_size
+  defp in_range?(
+         %Board{
+           position: %{top_left: top_left, bottom_right: bottom_right},
+           tile_size: tile_size
+         },
+         %{x: x, y: y}
+       ) do
+    top_left.x <= x && x <= bottom_right.x - tile_size &&
+      top_left.y <= y && y <= bottom_right.y - tile_size
   end
 
   defp colliding?(tile, towers) do
