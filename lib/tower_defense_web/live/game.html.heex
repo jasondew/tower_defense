@@ -36,9 +36,11 @@
         <%= for creep <- @state.creeps do %>
           <.creep
             type={creep.type}
-            health={creep.health}
             x={creep.position.x - @state.board.position.top_left.x}
             y={creep.position.y - @state.board.position.top_left.y}
+            size={@state.board.tile_size}
+            heading={creep.heading}
+            health={creep.health}
           />
         <% end %>
 
@@ -114,11 +116,13 @@
               at (<%= tower.tiles |> Enum.map(& &1.x) |> Enum.min() %>,
               <%= tower.tiles |> Enum.map(& &1.y) |> Enum.min() %>)
             </div>
+            <!--
             <div class="ml-2">
               range:
               <div class="ml-2">center: <%= inspect tower.range.center %></div>
               <div class="ml-2">radius: <%= inspect tower.range.radius %></div>
             </div>
+            -->
           </div>
         <% end %>
       </div>
@@ -127,7 +131,12 @@
         <div class="font-bold text-sm">creeps:</div>
         <%= for creep <- @state.creeps do %>
           <div class="ml-2">
-            <%= creep.type %> at <%= inspect(creep.position) %>
+            <%= creep.type %>
+            at <%= inspect(creep.position) %>
+            heading <%= inspect(creep.heading) %>
+          </div>
+          <div class="ml-2">
+            <%= inspect Tile.from_position(creep.position, @state.board.position.top_left, @state.board.tile_size) %>
           </div>
         <% end %>
       </div>

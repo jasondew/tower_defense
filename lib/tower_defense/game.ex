@@ -64,12 +64,20 @@ defmodule TowerDefense.Game do
     GenServer.call(pid, :send_next_level)
   end
 
+  @spec find_path([Tile.t()]) :: {:ok, [Tile.t()]} | {:error, :no_path}
+  def find_path(tower_tiles) do
+    middle = round(@tile_count / 2)
+    start_tile = Tile.new(0, middle)
+    end_tile = Tile.new(@tile_count - 1, middle)
+
+    Pathing.find_path(start_tile, end_tile, tower_tiles, @tile_count)
+  end
+
   ## CALLBACKS
 
   @impl GenServer
   def init(:ok) do
-    {:ok, path} = find_path([])
-    {:ok, %State{path: path}}
+    {:ok, new_state()}
   end
 
   @impl GenServer
@@ -88,8 +96,11 @@ defmodule TowerDefense.Game do
     {:reply, updated_state, updated_state}
   end
 
-  def handle_call(:reset, _from, _state) do
-    updated_state = %State{}
+  def handle_call(:reset, _from, state) do
+    updated_state =
+      new_state()
+      |> Map.put(:board, state.board)
+
     {:reply, updated_state, updated_state}
   end
 
@@ -205,33 +216,20 @@ defmodule TowerDefense.Game do
 
   ## PRIVATE FUNCTIONS
 
+  defp new_state do
+    {:ok, path} = find_path([])
+    %State{path: path}
+  end
+
   defp next_level_creeps(state) do
     # TODO vary depending on level
-    [
-      Creep.new(
-        :normal,
-        entrance_position(state.board),
-        exit_position(state.board)
-      )
-    ]
+    [Creep.new(:normal, entrance_position(state.board))]
   end
 
-  defp entrance_position(%Board{
-         position: %{top_left: top_left, bottom_right: bottom_right}
-       }) do
-    Position.new(
-      top_left.x,
-      trunc((top_left.y + bottom_right.y) / 2)
-    )
-  end
-
-  defp exit_position(%Board{
-         position: %{top_left: top_left, bottom_right: bottom_right}
-       }) do
-    Position.new(
-      bottom_right.x,
-      trunc((top_left.y + bottom_right.y) / 2)
-    )
+  defp entrance_position(board) do
+    0
+    |> Tile.new(trunc(@tile_count / 2))
+    |> Position.from_tile(board.position.top_left, board.tile_size)
   end
 
   defp in_range?(
@@ -261,13 +259,5 @@ defmodule TowerDefense.Game do
       {:ok, _path} -> false
       {:error, :no_path} -> true
     end
-  end
-
-  defp find_path(tower_tiles) do
-    middle = round(@tile_count / 2)
-    start_tile = Tile.new(0, middle)
-    end_tile = Tile.new(@tile_count - 1, middle)
-
-    Pathing.find_path(start_tile, end_tile, tower_tiles, @tile_count)
   end
 end

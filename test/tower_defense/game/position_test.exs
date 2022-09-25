@@ -10,11 +10,27 @@ defmodule TowerDefense.Game.PositionTest do
   end
 
   describe inspect(&Position.from_tile/3) do
-    test "returns a Position corresponding to a Tile" do
+    test "returns the top-left Position corresponding to a Tile" do
       assert Position.from_tile(Tile.new(3, 5), %{x: 3, y: 8}, 5) == %Position{
                x: 18,
                y: 33
              }
+    end
+
+    test "returns the center Position corresponding to a Tile" do
+      assert Position.from_tile(Tile.new(3, 5), %{x: 3, y: 8}, 5, :center) ==
+               %Position{
+                 x: 20,
+                 y: 35
+               }
+    end
+
+    test "returns the bottom-right Position corresponding to a Tile" do
+      assert Position.from_tile(Tile.new(3, 5), %{x: 3, y: 8}, 5, :bottom_right) ==
+               %Position{
+                 x: 22,
+                 y: 37
+               }
     end
   end
 end

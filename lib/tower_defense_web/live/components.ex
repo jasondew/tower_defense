@@ -33,7 +33,18 @@ defmodule TowerDefenseWeb.Live.Components do
 
   def creep(assigns) do
     ~H"""
-    <div style={style(assigns)} class="rotate-90"><%= creep_symbol(@type) %></div>
+    <div
+      style={style(assigns)}
+      class={"
+        w-[#{assigns.size}px]
+        h-[#{assigns.size}px]
+        #{rotation_class(assigns.heading)}
+        flex
+        justify-center
+      "}
+    >
+      <%= creep_symbol(@type) %>
+    </div>
     """
   end
 
@@ -90,6 +101,11 @@ defmodule TowerDefenseWeb.Live.Components do
       height: #{size}px;
     """
   end
+
+  defp rotation_class(:north), do: "rotate-0"
+  defp rotation_class(:east), do: "rotate-90"
+  defp rotation_class(:south), do: "rotate-180"
+  defp rotation_class(:west), do: "rotate-270"
 
   defp tower_symbol(:pellet), do: "→"
   defp tower_symbol(:squirt), do: "▶︎"

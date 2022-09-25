@@ -32,6 +32,14 @@ defmodule TowerDefense.Game.Pathing do
     end
   end
 
+  @spec manhattan_distance(
+          %{x: non_neg_integer(), y: non_neg_integer()},
+          %{x: non_neg_integer(), y: non_neg_integer()}
+        ) :: non_neg_integer()
+  def manhattan_distance(a, b) do
+    abs(a.x - b.x) + abs(a.y - b.y)
+  end
+
   ## PRIVATE FUNCTIONS
 
   defmodule PathState do
@@ -99,8 +107,7 @@ defmodule TowerDefense.Game.Pathing do
   end
 
   defp heuristic_cost(a, b) do
-    # Manhattan distance
-    abs(a.x - b.x) + abs(a.y - b.y)
+    manhattan_distance(a, b)
   end
 
   defp neighbors(%{current: current} = path_state) do
