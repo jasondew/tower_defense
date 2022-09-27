@@ -1,5 +1,13 @@
 defmodule TowerDefense.Game.Creep do
-  defstruct [:type, :position, :heading, :health, :speed]
+  defstruct [
+    :heading,
+    :health,
+    :maximum_health,
+    :position,
+    # must be <= 1.0
+    :speed,
+    :type
+  ]
 
   alias TowerDefense.Game.{Position, Tile}
 
@@ -10,6 +18,7 @@ defmodule TowerDefense.Game.Creep do
       position: position,
       heading: :east,
       health: 10,
+      maximum_health: 10,
       speed: speed
     }
   end

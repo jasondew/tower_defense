@@ -38,12 +38,17 @@ defmodule TowerDefenseWeb.Live.Components do
       class={"
         w-[#{assigns.size}px]
         h-[#{assigns.size}px]
-        #{rotation_class(assigns.heading)}
         flex
         justify-center
       "}
     >
-      <%= creep_symbol(@type) %>
+      <div class={"w-11/12 h-[4px] top-[2px] left-[2px] absolute flex border border-red-500"}>
+        <div class={"w-[#{round(100 * assigns.health / assigns.maximum_health)}%] h-[2px] bg-red-500"}></div>
+      </div>
+
+      <div class={rotation_class(assigns.heading)}>
+        <%= creep_symbol(@type) %>
+      </div>
     </div>
     """
   end
