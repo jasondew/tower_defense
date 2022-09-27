@@ -36,8 +36,8 @@
         <%= for creep <- @state.creeps do %>
           <.creep
             type={creep.type}
-            x={creep.position.x - @state.board.position.top_left.x}
-            y={creep.position.y - @state.board.position.top_left.y}
+            x={creep.position.x - @state.board.position.top_left.x - trunc(@state.board.tile_size / 2)}
+            y={creep.position.y - @state.board.position.top_left.y - trunc(@state.board.tile_size / 2)}
             size={@state.board.tile_size}
             heading={creep.heading}
             health={creep.health}

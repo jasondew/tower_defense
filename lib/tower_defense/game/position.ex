@@ -11,7 +11,8 @@ defmodule TowerDefense.Game.Position do
   @spec from_tile(
           Tile.t(),
           %{x: non_neg_integer(), y: non_neg_integer()},
-          pos_integer()
+          pos_integer(),
+          :top_left | :bottom_right | :center
         ) :: t()
   def from_tile(_tile, _offset, _tile_size, which_point \\ :top_left)
 

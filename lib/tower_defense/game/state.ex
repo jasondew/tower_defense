@@ -22,12 +22,9 @@ defmodule TowerDefense.Game.State do
         state.creeps,
         {[], state.score},
         fn creep, {updated_creeps, updated_score} ->
-          updated_creep = Creep.update(creep, state)
-
-          if in_bounds?(updated_creep.position, state.board) do
-            {[updated_creep | updated_creeps], updated_score}
-          else
-            {updated_creeps, updated_score - 10}
+          case Creep.update(creep, state) do
+            nil -> {updated_creeps, updated_score - 10}
+            updated_creep -> {[updated_creep | updated_creeps], updated_score}
           end
         end
       )

@@ -20,7 +20,7 @@ defmodule TowerDefense.Game.StateTest do
     end
 
     test "removes creeps that reach the edge and decrements the score" do
-      creep = Creep.new(:normal, Position.new(770, 0))
+      creep = Creep.new(:normal, Position.new(250, 130))
       state = state_with_path()
 
       assert %{creeps: [], score: -10} =

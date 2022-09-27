@@ -229,7 +229,7 @@ defmodule TowerDefense.Game do
   defp entrance_position(board) do
     0
     |> Tile.new(trunc(@tile_count / 2))
-    |> Position.from_tile(board.position.top_left, board.tile_size)
+    |> Position.from_tile(board.position.top_left, board.tile_size, :center)
   end
 
   defp in_range?(
