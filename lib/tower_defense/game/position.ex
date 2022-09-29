@@ -8,6 +8,14 @@ defmodule TowerDefense.Game.Position do
   @spec new(non_neg_integer(), non_neg_integer()) :: t()
   def new(x, y), do: %__MODULE__{x: x, y: y}
 
+  @spec translate(t(), t(), integer()) :: t()
+  def translate(position, offset, static_offset \\ 0) do
+    %__MODULE__{
+      x: position.x - offset.x - static_offset,
+      y: position.y - offset.y - static_offset
+    }
+  end
+
   @spec from_tile(
           Tile.t(),
           %{x: non_neg_integer(), y: non_neg_integer()},

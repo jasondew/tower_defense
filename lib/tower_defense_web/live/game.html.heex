@@ -45,6 +45,15 @@
           />
         <% end %>
 
+        <svg class="absolute" height={@state.board.size} width={@state.board.size}>
+          <%= for projectile <- @state.projectiles do %>
+            <.projectile
+              from={Position.translate(projectile.from_position, @state.board.position.top_left)}
+              to={Position.translate(projectile.to_position, @state.board.position.top_left)}
+            />
+          <% end %>
+        </svg>
+
         <%= for tile <- @state.path do %>
           <.tile x={tile.x} y={tile.y} size={@state.board.tile_size}/>
         <% end %>
@@ -106,6 +115,7 @@
         <div class="font-bold text-sm">board:</div>
         <div class="ml-2">top-left: <%= inspect(@state.board.position.top_left) %></div>
         <div class="ml-2">bottom-right: <%= inspect(@state.board.position.bottom_right) %></div>
+        <div class="ml-2">tile size: <%= @state.board.tile_size %></div>
       </div>
 
       <div>
@@ -143,8 +153,10 @@
       </div>
 
       <div>
-        <div class="font-bold text-sm">path:</div>
-        <div class="ml-2"> <%= inspect(@state.path) %> </div>
+        <div class="font-bold text-sm">projectiles:</div>
+        <%= for projectile <- @state.projectiles do %>
+          <div class="ml-2"> <%= inspect(projectile.from_position) %> -<%= inspect(projectile.progress) %>- <%= inspect(projectile.to_position) %> </div>
+        <% end %>
       </div>
 
       <div>

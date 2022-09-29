@@ -120,6 +120,7 @@ defmodule TowerDefense.Game do
             top_left: Position.new(x, y),
             bottom_right: Position.new(x + size - 1, y + size - 1)
           },
+          size: size,
           tile_size: div(size, @tile_count)
         })
 

@@ -10,9 +10,10 @@ defmodule TowerDefense.Game.State do
             board: %Board{},
             creeps: [],
             towers: [],
-            path: []
+            path: [],
+            projectiles: []
 
-  alias TowerDefense.Game.Creep
+  alias TowerDefense.Game.{Creep, Projectile, Tower}
 
   def new, do: %__MODULE__{}
 
@@ -29,9 +30,24 @@ defmodule TowerDefense.Game.State do
         end
       )
 
+    updated_projectiles =
+      Enum.reduce(state.towers, [], fn tower, projectiles ->
+        case Tower.targeted_creep(tower, updated_creeps) do
+          nil ->
+            projectiles
+
+          creep ->
+            [
+              Projectile.new(tower.position.center, creep.position)
+              | projectiles
+            ]
+        end
+      end)
+
     state
     |> Map.put(:creeps, updated_creeps)
     |> Map.put(:score, updated_score)
+    |> Map.put(:projectiles, updated_projectiles)
     |> Map.update(:time, 1, &(&1 + 1))
   end
 

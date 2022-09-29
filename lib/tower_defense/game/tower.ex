@@ -9,6 +9,7 @@ defmodule TowerDefense.Game.Tower do
       tiles: tiles_covered(top_left_tile),
       position: %{
         top_left: top_left_position,
+        center: center_position(top_left_position, tile_size),
         bottom_right: bottom_right_position(top_left_position, tile_size)
       },
       range: %{
@@ -17,6 +18,9 @@ defmodule TowerDefense.Game.Tower do
       }
     }
   end
+
+  def targeted_creep(%__MODULE__{}, _creeps = []), do: nil
+  def targeted_creep(%__MODULE__{}, [target | _creeps]), do: target
 
   def tiles_covered(%Tile{x: x, y: y}) do
     [
@@ -38,6 +42,10 @@ defmodule TowerDefense.Game.Tower do
   end
 
   ## PRIVATE FUNCTIONS
+
+  defp center_position(%{x: x, y: y}, tile_size) do
+    Position.new(x + tile_size - 1, y + tile_size - 1)
+  end
 
   defp bottom_right_position(%{x: x, y: y}, tile_size) do
     Position.new(x + 2 * tile_size - 1, y + 2 * tile_size - 1)

@@ -53,6 +53,18 @@ defmodule TowerDefenseWeb.Live.Components do
     """
   end
 
+  def projectile(assigns) do
+    ~H"""
+    <polyline style="fill: none; stroke-width: 2; stroke: red;"
+      points={"
+        #{assigns.from.x},#{assigns.from.y}
+        #{assigns.to.x},#{assigns.to.y}
+      "}
+    >
+    </polyline>
+    """
+  end
+
   def tile(assigns) do
     ~H"""
     <div style={tile_style(assigns)} class="bg-orange-500 opacity-10"></div>
@@ -106,6 +118,23 @@ defmodule TowerDefenseWeb.Live.Components do
       height: #{size}px;
     """
   end
+
+  defp projectile_style(%{from: from, to: to}) do
+    """
+      #{style(from)}
+      width: #{size(from.x, to.x)}px;
+      height: 2px;
+      transform: rotate(#{degrees(from, to)}deg);
+    """
+  end
+
+  defp degrees(from, to) do
+    round(
+      180 * :math.atan((to.y - from.y) / (to.x - from.x)) / :math.pi() + 180
+    )
+  end
+
+  defp size(a, b), do: abs(a - b)
 
   defp rotation_class(:north), do: "rotate-0"
   defp rotation_class(:east), do: "rotate-90"
