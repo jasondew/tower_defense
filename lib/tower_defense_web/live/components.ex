@@ -23,7 +23,7 @@ defmodule TowerDefenseWeb.Live.Components do
       <%= if assigns[:display_range] do %>
         <div
           class="z-0 bg-red-100 bg-opacity-25 border border-orange-500 rounded-full"
-          style={range_style(assigns)}
+        style={range_style(assigns)}
         >
         </div>
       <% end %>
@@ -43,7 +43,10 @@ defmodule TowerDefenseWeb.Live.Components do
       "}
     >
       <div class={"w-11/12 h-[4px] top-[2px] left-[2px] absolute flex border border-red-500"}>
-        <div class={"w-[#{round(100 * assigns.health / assigns.maximum_health)}%] h-[2px] bg-red-500"}></div>
+        <div
+          class={" h-[2px] bg-red-500"}
+          style={"width: #{round(100 * assigns.health / assigns.maximum_health)}%;"}
+        ></div>
       </div>
 
       <div class={rotation_class(assigns.heading)}>
@@ -53,15 +56,18 @@ defmodule TowerDefenseWeb.Live.Components do
     """
   end
 
-  def projectile(assigns) do
+  def projectile(%{from: from, to: to, size: size, color: color} = assigns) do
     ~H"""
-    <polyline style="fill: none; stroke-width: 2; stroke: red;"
-      points={"
-        #{assigns.from.x},#{assigns.from.y}
-        #{assigns.to.x},#{assigns.to.y}
-      "}
-    >
-    </polyline>
+    <div id={UUID.uuid4()} style={"
+      width: #{size}px;
+      height: #{size}px;
+      background-color: #{color};
+      border-radius: 50%;
+      offset-path: path('M#{from.x} #{from.y} T#{to.x} #{to.y}');
+      offset-distance: 0%;
+      animation: projectile 0.5s linear;
+      animation-fill-mode: forwards;
+    "}></div>
     """
   end
 
@@ -102,10 +108,10 @@ defmodule TowerDefenseWeb.Live.Components do
   defp range_style(%{size: size, range: range, x: x, y: y}) do
     """
       position: absolute;
-      left: #{x - range}px;
-      top: #{y - range}px;
-      width: #{size + 2 * range}px;
-      height: #{size + 2 * range}px;
+      left: #{x - size}px;
+      top: #{y - size}px;
+      width: #{2 * range}px;
+      height: #{2 * range}px;
     """
   end
 
@@ -118,23 +124,6 @@ defmodule TowerDefenseWeb.Live.Components do
       height: #{size}px;
     """
   end
-
-  defp projectile_style(%{from: from, to: to}) do
-    """
-      #{style(from)}
-      width: #{size(from.x, to.x)}px;
-      height: 2px;
-      transform: rotate(#{degrees(from, to)}deg);
-    """
-  end
-
-  defp degrees(from, to) do
-    round(
-      180 * :math.atan((to.y - from.y) / (to.x - from.x)) / :math.pi() + 180
-    )
-  end
-
-  defp size(a, b), do: abs(a - b)
 
   defp rotation_class(:north), do: "rotate-0"
   defp rotation_class(:east), do: "rotate-90"

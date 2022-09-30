@@ -1,11 +1,12 @@
 defmodule TowerDefense.Game.Projectile do
-  defstruct [:from_position, :to_position, :progress]
+  defstruct [:creep, :damage, :from_position, :to_position]
 
-  def new(from_position, to_position) do
+  def new(creep, damage, from_position, to_position) do
     %__MODULE__{
+      creep: creep,
+      damage: damage,
       from_position: from_position,
-      to_position: to_position,
-      progress: 0
+      to_position: to_position
     }
   end
 end

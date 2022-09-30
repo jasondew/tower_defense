@@ -1,7 +1,7 @@
 defmodule TowerDefense.Game.TowerTest do
   use ExUnit.Case
 
-  alias TowerDefense.Game.{Position, Tile, Tower}
+  alias TowerDefense.Game.{Creep, Position, Tile, Tower}
 
   describe "new/3" do
     test "returns a Tower struct" do
@@ -23,6 +23,24 @@ defmodule TowerDefense.Game.TowerTest do
                }
              } = Tower.new(:bash, Tile.new(3, 7), Position.new(50, 70), 10)
     end
+  end
+
+  describe "targeted_creep/2" do
+    test "returns nil given no creeps" do
+      refute Tower.targeted_creep(
+               Tower.new(:squirt, Tile.new(3, 7), Position.new(50, 70), 10),
+               []
+             )
+    end
+
+    test "returns nil when no creeps in range" do
+      refute Tower.targeted_creep(
+               Tower.new(:squirt, Tile.new(3, 7), Position.new(50, 70), 10),
+               [Creep.new(:normal, Position.new(0, 0))]
+             )
+    end
+
+    test "returns a random creep in range"
   end
 
   describe "tiles_covered/1" do

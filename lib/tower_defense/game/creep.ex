@@ -1,5 +1,6 @@
 defmodule TowerDefense.Game.Creep do
   defstruct [
+    :id,
     :heading,
     :health,
     :maximum_health,
@@ -14,6 +15,7 @@ defmodule TowerDefense.Game.Creep do
   def new(type, position, speed \\ 1.0) do
     # TODO vary parameters depending on type
     %__MODULE__{
+      id: UUID.uuid4(),
       type: type,
       position: position,
       heading: :east,

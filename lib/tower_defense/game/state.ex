@@ -18,14 +18,29 @@ defmodule TowerDefense.Game.State do
   def new, do: %__MODULE__{}
 
   def update(state) do
+    updated_creeps =
+      Enum.reduce(state.projectiles, state.creeps, fn projectile, creeps ->
+        Enum.map(creeps, fn creep ->
+          if creep.id == projectile.creep.id do
+            %{creep | health: max(creep.health - projectile.damage, 0)}
+          else
+            creep
+          end
+        end)
+      end)
+
     {updated_creeps, updated_score} =
       Enum.reduce(
-        state.creeps,
+        updated_creeps,
         {[], state.score},
         fn creep, {updated_creeps, updated_score} ->
-          case Creep.update(creep, state) do
-            nil -> {updated_creeps, updated_score - 10}
-            updated_creep -> {[updated_creep | updated_creeps], updated_score}
+          if creep.health > 0 do
+            case Creep.update(creep, state) do
+              nil -> {updated_creeps, updated_score - 10}
+              updated_creep -> {[updated_creep | updated_creeps], updated_score}
+            end
+          else
+            {updated_creeps, updated_score + 10}
           end
         end
       )
@@ -38,7 +53,12 @@ defmodule TowerDefense.Game.State do
 
           creep ->
             [
-              Projectile.new(tower.position.center, creep.position)
+              Projectile.new(
+                creep,
+                Tower.damage(tower),
+                tower.position.center,
+                creep.position
+              )
               | projectiles
             ]
         end

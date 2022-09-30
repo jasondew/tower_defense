@@ -14,13 +14,26 @@ defmodule TowerDefense.Game.Tower do
       },
       range: %{
         center: center(top_left_position, tile_size),
-        radius: radius(type, tile_size)
+        radius: range(type, tile_size)
       }
     }
   end
 
   def targeted_creep(%__MODULE__{}, _creeps = []), do: nil
-  def targeted_creep(%__MODULE__{}, [target | _creeps]), do: target
+
+  def targeted_creep(%__MODULE__{range: range}, creeps) do
+    case Enum.filter(creeps, &in_range?(range, &1.position)) do
+      [] -> nil
+      creeps_in_range -> Enum.random(creeps_in_range)
+    end
+  end
+
+  def range(_type, tile_size), do: tile_size * 3
+
+  def damage(%__MODULE__{}) do
+    # TODO: implement different damage per type
+    1
+  end
 
   def tiles_covered(%Tile{x: x, y: y}) do
     [
@@ -55,6 +68,7 @@ defmodule TowerDefense.Game.Tower do
     Position.new(x + tile_size, y + tile_size)
   end
 
-  # TODO: this should be dynamic based on the tower type
-  defp radius(_type, tile_size), do: tile_size * 2
+  defp in_range?(%{center: center, radius: radius}, position) do
+    (position.x - center.x) ** 2 + (position.y - center.y) ** 2 <= radius ** 2
+  end
 end

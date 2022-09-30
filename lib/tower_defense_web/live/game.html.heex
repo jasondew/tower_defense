@@ -25,7 +25,7 @@
         <%= for tower <- @state.towers do %>
           <.tower
             type={tower.type}
-            range={@state.board.tile_size * 2}
+            range={tower.range.radius}
             display_range={Tower.inside?(tower, @mouse_position)}
             size={@state.board.tile_size * 2}
             x={tower.position.top_left.x - @state.board.position.top_left.x}
@@ -45,14 +45,14 @@
           />
         <% end %>
 
-        <svg class="absolute" height={@state.board.size} width={@state.board.size}>
           <%= for projectile <- @state.projectiles do %>
             <.projectile
               from={Position.translate(projectile.from_position, @state.board.position.top_left)}
               to={Position.translate(projectile.to_position, @state.board.position.top_left)}
+              size={@state.board.tile_size / 4}
+              color="black"
             />
           <% end %>
-        </svg>
 
         <%= for tile <- @state.path do %>
           <.tile x={tile.x} y={tile.y} size={@state.board.tile_size}/>
@@ -127,13 +127,11 @@
               at (<%= tower.tiles |> Enum.map(& &1.x) |> Enum.min() %>,
               <%= tower.tiles |> Enum.map(& &1.y) |> Enum.min() %>)
             </div>
-            <!--
             <div class="ml-2">
               range:
               <div class="ml-2">center: <%= inspect tower.range.center %></div>
               <div class="ml-2">radius: <%= inspect tower.range.radius %></div>
             </div>
-            -->
           </div>
         <% end %>
       </div>
@@ -145,6 +143,7 @@
             <%= creep.type %>
             at <%= inspect(creep.position) %>
             heading <%= inspect(creep.heading) %>
+            health <%= inspect(creep.health) %> / <%= inspect(creep.maximum_health) %>
           </div>
           <div class="ml-2">
             <%= inspect Tile.from_position(creep.position, @state.board.position.top_left, @state.board.tile_size) %>
@@ -155,7 +154,7 @@
       <div>
         <div class="font-bold text-sm">projectiles:</div>
         <%= for projectile <- @state.projectiles do %>
-          <div class="ml-2"> <%= inspect(projectile.from_position) %> -<%= inspect(projectile.progress) %>- <%= inspect(projectile.to_position) %> </div>
+          <div class="ml-2"> <%= inspect(projectile.from_position) %> to <%= inspect(projectile.to_position) %> </div>
         <% end %>
       </div>
 
@@ -184,7 +183,7 @@
         type={@selected_tower}
         size={@state.board.tile_size * 2}
         display_range={true}
-        range={@state.board.tile_size * 2}
+        range={Tower.range(@selected_tower, @state.board.tile_size)}
         x={position.x}
         y={position.y}
       />
