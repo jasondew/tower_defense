@@ -3,7 +3,16 @@ defmodule TowerDefense.Game do
 
   require Logger
 
-  alias TowerDefense.Game.{Board, Creep, Pathing, Position, State, Tile, Tower}
+  alias TowerDefense.Game.{
+    Board,
+    Creep,
+    Level,
+    Pathing,
+    Position,
+    State,
+    Tile,
+    Tower
+  }
 
   @type tower_type :: :pellet | :squirt | :dart | :swarm | :frost | :bash
   @type position :: %{x: non_neg_integer(), y: non_neg_integer()}
@@ -203,14 +212,16 @@ defmodule TowerDefense.Game do
   end
 
   def handle_call(:send_next_level, _from, state) do
+    # TODO: combine existing creep with with new creep queue from next level
+    updated_level = state.level + 1
+
     updated_state =
       state
-      |> Map.update(
-        :creeps,
-        [],
-        &Enum.concat(next_level_creeps(state), &1)
+      |> Map.put(
+        :creep_queue,
+        Level.creeps(updated_level, entrance_position(state.board))
       )
-      |> Map.update(:level, 1, &(&1 + 1))
+      |> Map.put(:level, updated_level)
 
     {:reply, updated_state, updated_state}
   end
@@ -220,11 +231,6 @@ defmodule TowerDefense.Game do
   defp new_state do
     {:ok, path} = find_path([])
     %State{path: path}
-  end
-
-  defp next_level_creeps(state) do
-    # TODO vary depending on level
-    [Creep.new(:normal, entrance_position(state.board))]
   end
 
   defp entrance_position(board) do

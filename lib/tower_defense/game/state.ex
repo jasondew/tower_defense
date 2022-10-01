@@ -9,6 +9,7 @@ defmodule TowerDefense.Game.State do
             paused: true,
             board: %Board{},
             creeps: [],
+            creep_queue: [],
             towers: [],
             path: [],
             projectiles: []
@@ -64,8 +65,15 @@ defmodule TowerDefense.Game.State do
         end
       end)
 
+    {new_creeps, updated_creep_queue} =
+      case state.creep_queue do
+        [] -> {[], []}
+        [new_creeps | updated_creep_queue] -> {new_creeps, updated_creep_queue}
+      end
+
     state
-    |> Map.put(:creeps, updated_creeps)
+    |> Map.put(:creeps, Enum.concat(new_creeps, updated_creeps))
+    |> Map.put(:creep_queue, updated_creep_queue)
     |> Map.put(:score, updated_score)
     |> Map.put(:projectiles, updated_projectiles)
     |> Map.update(:time, 1, &(&1 + 1))
