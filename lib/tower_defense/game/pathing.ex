@@ -113,7 +113,7 @@ defmodule TowerDefense.Game.Pathing do
   defp neighbors(%{current: current} = path_state) do
     for x <- (current.x - 1)..(current.x + 1),
         y <- (current.y - 1)..(current.y + 1),
-        !(x == current.y && y == current.y),
+        !(x == current.x && y == current.y),
         x >= 0,
         y >= 0,
         x < path_state.tile_count,

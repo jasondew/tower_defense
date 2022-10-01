@@ -5,14 +5,12 @@ defmodule TowerDefense.Game.PathingTest do
 
   describe "find_path/3" do
     test "returns the shortest path from one tile to another given no barriers" do
-      assert Pathing.find_path(Tile.new(0, 0), Tile.new(2, 2), [], 3) ==
+      assert Pathing.find_path(Tile.new(0, 1), Tile.new(2, 1), [], 3) ==
                {:ok,
                 [
-                  Tile.new(0, 0),
-                  Tile.new(1, 0),
-                  Tile.new(2, 0),
-                  Tile.new(2, 1),
-                  Tile.new(2, 2)
+                  Tile.new(0, 1),
+                  Tile.new(1, 1),
+                  Tile.new(2, 1)
                 ]}
     end
 
