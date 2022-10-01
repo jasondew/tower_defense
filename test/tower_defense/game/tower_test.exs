@@ -19,7 +19,7 @@ defmodule TowerDefense.Game.TowerTest do
                },
                range: %{
                  center: %Position{x: 60, y: 80},
-                 radius: 20
+                 radius: 30
                }
              } = Tower.new(:bash, Tile.new(3, 7), Position.new(50, 70), 10)
     end
@@ -40,7 +40,15 @@ defmodule TowerDefense.Game.TowerTest do
              )
     end
 
-    test "returns a random creep in range"
+    test "returns a random creep in range" do
+      in_range_creep = Creep.new(:normal, Position.new(40, 60))
+      out_of_range_creep = Creep.new(:normal, Position.new(20, 70))
+
+      assert Tower.targeted_creep(
+               Tower.new(:squirt, Tile.new(3, 7), Position.new(50, 70), 10),
+               [in_range_creep, out_of_range_creep]
+             ) == in_range_creep
+    end
   end
 
   describe "tiles_covered/1" do

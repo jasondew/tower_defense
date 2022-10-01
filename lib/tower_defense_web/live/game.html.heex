@@ -113,9 +113,15 @@
 
       <div>
         <div class="font-bold text-sm">board:</div>
-        <div class="ml-2">top-left: <%= inspect(@state.board.position.top_left) %></div>
-        <div class="ml-2">bottom-right: <%= inspect(@state.board.position.bottom_right) %></div>
-        <div class="ml-2">tile size: <%= @state.board.tile_size %></div>
+        <div class="ml-2">
+          <%= inspect(@state.board.position.top_left) %>
+          to
+          <%= inspect(@state.board.position.bottom_right) %>
+        </div>
+        <div class="ml-2">
+          size: <%= @state.board.size %>
+          tile size: <%= @state.board.tile_size %>
+        </div>
       </div>
 
       <div>
@@ -128,9 +134,8 @@
               <%= tower.tiles |> Enum.map(& &1.y) |> Enum.min() %>)
             </div>
             <div class="ml-2">
-              range:
-              <div class="ml-2">center: <%= inspect tower.range.center %></div>
-              <div class="ml-2">radius: <%= inspect tower.range.radius %></div>
+              center: <%= inspect tower.range.center %>
+              radius: <%= inspect tower.range.radius %>
             </div>
           </div>
         <% end %>
@@ -142,11 +147,9 @@
           <div class="ml-2">
             <%= creep.type %>
             at <%= inspect(creep.position) %>
-            heading <%= inspect(creep.heading) %>
-            health <%= inspect(creep.health) %> / <%= inspect(creep.maximum_health) %>
-          </div>
-          <div class="ml-2">
-            <%= inspect Tile.from_position(creep.position, @state.board.position.top_left, @state.board.tile_size) %>
+            <div class="ml-2">
+              health <%= inspect(creep.health) %>/<%= inspect(creep.maximum_health) %>
+            </div>
           </div>
         <% end %>
       </div>
