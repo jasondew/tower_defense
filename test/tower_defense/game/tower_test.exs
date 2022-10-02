@@ -6,7 +6,7 @@ defmodule TowerDefense.Game.TowerTest do
   describe "new/3" do
     test "returns a Tower struct" do
       assert %Tower{
-               type: :bash,
+               model: :bash,
                tiles: [
                  %Tile{x: 3, y: 7},
                  %Tile{x: 4, y: 7},
@@ -17,10 +17,7 @@ defmodule TowerDefense.Game.TowerTest do
                  top_left: %Position{x: 50, y: 70},
                  bottom_right: %Position{x: 69, y: 89}
                },
-               range: %{
-                 center: %Position{x: 60, y: 80},
-                 radius: 30
-               }
+               radius: 30
              } = Tower.new(:bash, Tile.new(3, 7), Position.new(50, 70), 10)
     end
   end
@@ -41,8 +38,8 @@ defmodule TowerDefense.Game.TowerTest do
     end
 
     test "returns a random creep in range" do
-      in_range_creep = Creep.new(:normal, Position.new(40, 60))
-      out_of_range_creep = Creep.new(:normal, Position.new(20, 70))
+      in_range_creep = Creep.new(:normal, Position.new(10, 70))
+      out_of_range_creep = Creep.new(:normal, Position.new(110, 70))
 
       assert Tower.targeted_creep(
                Tower.new(:squirt, Tile.new(3, 7), Position.new(50, 70), 10),

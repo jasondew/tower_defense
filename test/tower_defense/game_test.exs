@@ -67,7 +67,7 @@ defmodule TowerDefense.GameTest do
       assert %{
                towers: [
                  %Tower{
-                   type: :bash,
+                   model: :bash,
                    position: %{
                      top_left: %{x: 190, y: 260}
                    }

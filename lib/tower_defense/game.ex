@@ -14,9 +14,6 @@ defmodule TowerDefense.Game do
     Tower
   }
 
-  @type tower_type :: :pellet | :squirt | :dart | :swarm | :frost | :bash
-  @type position :: %{x: non_neg_integer(), y: non_neg_integer()}
-
   @tile_count 26
 
   ## PUBLIC API
@@ -56,13 +53,13 @@ defmodule TowerDefense.Game do
     GenServer.call(pid, {:set_board_disposition, parameters})
   end
 
-  @spec place_tower(pid(), tower_type, position) :: State.t()
-  def place_tower(pid, type, %{x: x, y: y}) do
-    GenServer.call(pid, {:place_tower, type, Position.new(x, y)})
+  @spec place_tower(pid(), Tower.model(), Position.t()) :: State.t()
+  def place_tower(pid, model, %{x: x, y: y}) do
+    GenServer.call(pid, {:place_tower, model, Position.new(x, y)})
   end
 
-  @spec attempt_tower_placement(pid(), position) ::
-          {:ok, position}
+  @spec attempt_tower_placement(pid(), Position.t()) ::
+          {:ok, Position.t()}
           | {:error, :paused | :out_of_bounds}
   def attempt_tower_placement(pid, %{x: x, y: y}) do
     GenServer.call(pid, {:attempt_tower_placement, Position.new(x, y)})
@@ -71,6 +68,11 @@ defmodule TowerDefense.Game do
   @spec send_next_level(pid()) :: State.t()
   def send_next_level(pid) do
     GenServer.call(pid, :send_next_level)
+  end
+
+  @spec send_creep(pid(), Creep.species()) :: State.t()
+  def send_creep(pid, species) do
+    GenServer.call(pid, {:send_creep, species})
   end
 
   @spec find_path([Tile.t()]) :: {:ok, [Tile.t()]} | {:error, :no_path}
@@ -140,7 +142,7 @@ defmodule TowerDefense.Game do
   end
 
   def handle_call(
-        {:place_tower, type, position},
+        {:place_tower, model, position},
         _from,
         %{board: board} = state
       ) do
@@ -156,7 +158,7 @@ defmodule TowerDefense.Game do
         )
 
       new_tower =
-        Tower.new(type, top_left_tile, top_left_position, board.tile_size)
+        Tower.new(model, top_left_tile, top_left_position, board.tile_size)
 
       updated_towers = [new_tower | state.towers]
       {:ok, updated_path} = find_path(Enum.flat_map(updated_towers, & &1.tiles))
@@ -222,6 +224,17 @@ defmodule TowerDefense.Game do
         Level.creeps(updated_level, entrance_position(state.board))
       )
       |> Map.put(:level, updated_level)
+
+    {:reply, updated_state, updated_state}
+  end
+
+  def handle_call({:send_creep, species}, _from, state) do
+    updated_state =
+      state
+      |> Map.put(
+        :creep_queue,
+        [[Creep.new(species, entrance_position(state.board))]]
+      )
 
     {:reply, updated_state, updated_state}
   end

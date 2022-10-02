@@ -24,8 +24,8 @@
       >
         <%= for tower <- @state.towers do %>
           <.tower
-            type={tower.type}
-            range={tower.range.radius}
+            model={tower.model}
+            range={tower.radius}
             display_range={Tower.inside?(tower, @mouse_position)}
             size={@state.board.tile_size * 2}
             x={tower.position.top_left.x - @state.board.position.top_left.x}
@@ -35,13 +35,14 @@
 
         <%= for creep <- @state.creeps do %>
           <.creep
-            type={creep.type}
+            species={creep.species}
             x={creep.position.x - @state.board.position.top_left.x - trunc(@state.board.tile_size / 2)}
             y={creep.position.y - @state.board.position.top_left.y - trunc(@state.board.tile_size / 2)}
             size={@state.board.tile_size}
             heading={creep.heading}
             health={creep.health}
             maximum_health={creep.maximum_health}
+            show_health={true}
           />
         <% end %>
 
@@ -97,19 +98,34 @@
     </div>
 
     <div id="towers" class="flex justify-between p-2">
-      <%= for type <- @config[:towers] do %>
+      <%= for model <- Tower.models() do %>
         <.tower
-          type={type}
+          model={model}
           phx-click="select-tower"
-          phx-value-type={type}
+          phx-value-model={model}
           size={30}
-          selected={@selected_tower == type}
+          selected={@selected_tower == model}
         />
       <% end %>
     </div>
 
     <div class="p-2 font-mono text-sm flex flex-col gap-4">
       <div class="text-lg">DEBUG</div>
+
+      <div>
+        <div class="font-bold text-sm">Send Creep</div>
+        <div class="flex gap-2">
+          <%= for species <- Creep.species do %>
+            <div phx-click="send-creep" phx-value-species={species} class="border border-2 border-orange-400 text-center">
+              <.creep
+                species={species}
+                size={@state.board.tile_size}
+                heading={:east}
+              />
+            </div>
+          <% end %>
+        </div>
+      </div>
 
       <div>
         <div class="font-bold text-sm">board:</div>
@@ -128,15 +144,9 @@
         <div class="font-bold text-sm">towers:</div>
         <%= for tower <- @state.towers do %>
           <div class="ml-2">
-            <div>
-              <%= tower.type %>
-              at (<%= tower.tiles |> Enum.map(& &1.x) |> Enum.min() %>,
-              <%= tower.tiles |> Enum.map(& &1.y) |> Enum.min() %>)
-            </div>
-            <div class="ml-2">
-              center: <%= inspect tower.range.center %>
-              radius: <%= inspect tower.range.radius %>
-            </div>
+            <%= tower.model %>
+            at (<%= tower.tiles |> Enum.map(& &1.x) |> Enum.min() %>,
+            <%= tower.tiles |> Enum.map(& &1.y) |> Enum.min() %>)
           </div>
         <% end %>
       </div>
@@ -145,7 +155,7 @@
         <div class="font-bold text-sm">creeps:</div>
         <%= for creep <- @state.creeps do %>
           <div class="ml-2">
-            <%= creep.type %>
+            <%= creep.species %>
             at <%= inspect(creep.position) %>
             <div class="ml-2">
               health <%= inspect(creep.health) %>/<%= inspect(creep.maximum_health) %>
@@ -183,10 +193,10 @@
     <% {:ok, %{position: position}} -> %>
       <.tower
         phx-click="place-tower"
-        type={@selected_tower}
+        model={@selected_tower}
         size={@state.board.tile_size * 2}
         display_range={true}
-        range={Tower.range(@selected_tower, @state.board.tile_size)}
+        range={Tower.radius(@selected_tower) * @state.board.tile_size}
         x={position.x}
         y={position.y}
       />

@@ -15,9 +15,9 @@ defmodule TowerDefenseWeb.Live.Components do
           }
         "}
         style={style(assigns)}
-        {assigns_to_attributes(assigns, [:size, :type, :range, :display_range, :x, :y])}
+        {assigns_to_attributes(assigns, [:size, :model, :range, :display_range, :x, :y])}
       >
-        <%= tower_symbol(assigns.type) %>
+        <%= tower_symbol(assigns.model) %>
       </div>
 
       <%= if assigns[:display_range] do %>
@@ -40,17 +40,21 @@ defmodule TowerDefenseWeb.Live.Components do
         h-[#{assigns.size}px]
         flex
         justify-center
+        items-center
+        cursor-pointer
       "}
     >
-      <div class={"w-11/12 h-[4px] top-[2px] left-[2px] absolute flex border border-red-500"}>
-        <div
-          class={" h-[2px] bg-red-500"}
-          style={"width: #{round(100 * assigns.health / assigns.maximum_health)}%;"}
-        ></div>
-      </div>
+      <%= if assigns[:show_health] do %>
+        <div class={"w-11/12 h-[4px] top-[2px] left-[2px] absolute flex border border-red-500"}>
+          <div
+            class={" h-[2px] bg-red-500"}
+            style={"width: #{round(100 * assigns.health / assigns.maximum_health)}%;"}
+          ></div>
+        </div>
+      <% end %>
 
       <div class={rotation_class(assigns.heading)}>
-        <%= creep_symbol(@type) %>
+        <%= creep_symbol(@species) %>
       </div>
     </div>
     """
@@ -108,8 +112,8 @@ defmodule TowerDefenseWeb.Live.Components do
   defp range_style(%{size: size, range: range, x: x, y: y}) do
     """
       position: absolute;
-      left: #{x - size}px;
-      top: #{y - size}px;
+      left: #{x - range + size / 2}px;
+      top: #{y - range + size / 2}px;
       width: #{2 * range}px;
       height: #{2 * range}px;
     """
@@ -138,4 +142,8 @@ defmodule TowerDefenseWeb.Live.Components do
   defp tower_symbol(:bash), do: "◎"
 
   defp creep_symbol(:normal), do: "🐞"
+  defp creep_symbol(:immune), do: "🪲"
+  defp creep_symbol(:spawn), do: "🕷"
+  defp creep_symbol(:flying), do: "🪰"
+  defp creep_symbol(:boss), do: "🪳"
 end

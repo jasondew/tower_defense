@@ -4,7 +4,7 @@ defmodule TowerDefenseWeb.Live.Game do
   import TowerDefenseWeb.Live.Components
 
   alias TowerDefense.Game
-  alias TowerDefense.Game.{Position, Tile, Tower}
+  alias TowerDefense.Game.{Creep, Position, Tile, Tower}
 
   @one_second 1_000
 
@@ -29,11 +29,9 @@ defmodule TowerDefenseWeb.Live.Game do
     {8, :boss}
   ]
 
-  @towers [:pellet, :squirt, :dart, :swarm, :frost, :bash]
-
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    config = %{levels: @levels, status_colors: @status_colors, towers: @towers}
+    config = %{levels: @levels, status_colors: @status_colors}
 
     unmounted_assigns = %{
       config: config,
@@ -85,10 +83,10 @@ defmodule TowerDefenseWeb.Live.Game do
 
   def handle_event(
         "select-tower",
-        %{"type" => type},
+        %{"model" => model},
         %{assigns: %{selected_tower: current_tower}} = socket
       ) do
-    new_tower = String.to_existing_atom(type)
+    new_tower = String.to_existing_atom(model)
 
     selected_tower =
       if new_tower == current_tower do
@@ -142,6 +140,15 @@ defmodule TowerDefenseWeb.Live.Game do
         %{assigns: %{game_pid: game_pid}} = socket
       ) do
     {:noreply, assign(socket, state: Game.send_next_level(game_pid))}
+  end
+
+  def handle_event(
+        "send-creep",
+        %{"species" => species_string},
+        %{assigns: %{game_pid: game_pid}} = socket
+      ) do
+    species = String.to_existing_atom(species_string)
+    {:noreply, assign(socket, state: Game.send_creep(game_pid, species))}
   end
 
   ## PRIVATE FUNCTIONS

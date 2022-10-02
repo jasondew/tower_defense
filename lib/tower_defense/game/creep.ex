@@ -1,30 +1,62 @@
 defmodule TowerDefense.Game.Creep do
   defstruct [
     :id,
+    :species,
     :heading,
     :health,
     :maximum_health,
     :position,
-    # must be <= 1.0
-    :speed,
-    :type
+    # must be 1 / n where n is an integer < 1
+    :speed
   ]
 
-  alias TowerDefense.Game.{Position, Tile}
+  alias TowerDefense.Game.{Position, State, Tile}
 
-  def new(type, position, speed \\ 1.0) do
-    # TODO vary parameters depending on type
+  @type species :: :normal | :boss
+  @type t :: %__MODULE__{
+          id: String.t(),
+          species: :normal | :immune | :spawn | :flying | :boss,
+          heading: :north | :south | :east | :west,
+          health: pos_integer(),
+          maximum_health: pos_integer(),
+          position: Position.t(),
+          speed: float()
+        }
+
+  @spec species :: species
+  def species, do: ~w[normal immune spawn flying boss]a
+
+  @spec new(species, Position.t(), keyword()) :: t()
+  def new(species, position, overrides \\ []) do
+    health = Keyword.get(overrides, :health, health(species))
+    speed = Keyword.get(overrides, :speed, speed(species))
+
     %__MODULE__{
       id: UUID.uuid4(),
-      type: type,
+      species: species,
       position: position,
       heading: :east,
-      health: 10,
-      maximum_health: 10,
+      health: health,
+      maximum_health: health,
       speed: speed
     }
   end
 
+  @spec health(species) :: pos_integer()
+  def health(:normal), do: 20
+  def health(:immune), do: 73
+  def health(:spawn), do: 132
+  def health(:flying), do: 44
+  def health(:boss), do: 500
+
+  @spec speed(species) :: float()
+  def speed(:normal), do: 1.0
+  def speed(:immune), do: 1.0
+  def speed(:spawn), do: 1.0
+  def speed(:flying), do: 1.0
+  def speed(:boss), do: 0.5
+
+  @spec update(t(), State.t()) :: t()
   def update(creep, %{path: []}), do: creep
 
   def update(
